@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">LiquorGlass</string>
+    <string name="btn_register">Sign Up</string>
+    <string name="btn_login">Sign In</string>
+    <string name="hint_phone">Phone Number</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_fname">First name</string>
+    <string name="hint_lname">Last name</string>
+    <string name="hint_retypePass">Re-type your password</string>
+    <string name="title_activity_home">Home</string>
+    <string name="place_order">Place order</string>
+    <string name="txt_slogan">Bringing the party closer to you and making sure that you never run dry</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="confirm_location">Confirm your location</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyDF7Uy1ibN5RoPmXHQ1fQ4weSMc55r-aMo
+    </string>
+</resources>

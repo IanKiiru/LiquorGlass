@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.kiiru.liquorglass.AlcoholTypes">
+    
+    <android.support.v7.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/alcohol_recyclerMenu"
+        android:scrollbars="vertical">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/viewCartFab"
+        android:src="@drawable/ic_shopping_cart_black_24dp"
+        app:backgroundTint="@color/fabBackgroundTint"
+        android:elevation="6dp"
+        app:pressedTranslationZ="12dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="15dp"
+        app:useCompatPadding="true"/>
+
+</android.support.design.widget.CoordinatorLayout>
