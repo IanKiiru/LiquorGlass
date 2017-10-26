@@ -50,6 +50,17 @@
             app:met_primaryColor="@android:color/white"
             app:met_singleLineEllipsis="true"
             />
+        
+        <com.rey.material.widget.CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/chkBoxRemember"
+            style="@style/Material.Drawable.CheckBox"
+            android:text="Remember Me"
+            app:cbd_tickerColor = "@color/colorPrimaryDark"
+
+            android:gravity="center_vertical"
+            android:textColor="@color/colorPrimary"/>
 
 
 
