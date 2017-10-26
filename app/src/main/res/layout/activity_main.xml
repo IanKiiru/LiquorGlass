@@ -39,9 +39,9 @@
             android:layout_weight="1"
             android:textColor="@android:color/white"
             app:buttonColor="@color/btn_register"
-            app:shadowColor="@android:color/black"
+            app:shadowColor="@color/colorPrimaryDark"
             app:shadowEnabled="true"
-            app:shadowHeight="5dp"
+            app:shadowHeight="3dp"
             app:cornerRadius="4dp"
             android:layout_margin="8dp"
             />
@@ -53,9 +53,9 @@
             android:layout_weight="1"
             android:textColor="@android:color/white"
             app:buttonColor="@color/btn_login"
-            app:shadowColor="@android:color/black"
+            app:shadowColor="@color/colorPrimaryDark"
             app:shadowEnabled="true"
-            app:shadowHeight="5dp"
+            app:shadowHeight="3dp"
             app:cornerRadius="4dp"
             android:layout_margin="8dp"
             />

@@ -26,11 +26,11 @@ dependencies {
     })
 
     //Adding Libraries
-    compile'com.github.mancj:MaterialSearchBar:0.7.1'
+    compile 'com.github.mancj:MaterialSearchBar:0.7.1'
     compile 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
     compile 'com.cepheuen.elegant-number-button:lib:1.0.2'
     compile 'com.android.support:appcompat-v7:25.3.1'
-	compile 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
+    compile 'com.readystatesoftware.sqliteasset:sqliteassethelper:+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.google.firebase:firebase-database:11.0.4'
     compile 'com.google.android.gms:play-services-maps:11.0.4'

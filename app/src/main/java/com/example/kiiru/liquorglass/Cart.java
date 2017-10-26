@@ -47,7 +47,7 @@ public class Cart extends AppCompatActivity {
         //Initialize Firebase
 
         requestDatabase = FirebaseDatabase.getInstance();
-        requestsRef = requestDatabase.getReference("Requests");
+        requestsRef = requestDatabase.getReference("customerRequest").child("itemsOrdered");
 
         cartRecycler = (RecyclerView) findViewById(R.id.listCart);
         cartRecycler.setHasFixedSize(true);

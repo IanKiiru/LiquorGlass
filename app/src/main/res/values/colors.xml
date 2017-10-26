@@ -7,11 +7,12 @@
 
     <color name="btn_register">#37474F</color>
     <color name="btn_login">#363636</color>
+    <color name="profileDetails">#FFD600</color>
 
     <color name="overlayBackground">#7f333639</color>
     <color name="hint_editTextColor">#450103</color>
     <color name="overlayActionBar">#0e0d0e</color>
-    <color name="fabBackgroundTint">#CDDC39</color>
+    <color name="fabBackgroundTint">#FFD600</color>
 
 
 </resources>

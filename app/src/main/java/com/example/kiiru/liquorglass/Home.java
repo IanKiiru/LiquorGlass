@@ -145,7 +145,7 @@ public class Home extends AppCompatActivity
                     merchantLocationRef.removeEventListener(merchantLocationRefListener);
 
                     if (merchantFoundID != null) {
-                        DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest");
+                        DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerOrderId");
                         merchantRef.removeValue();
                         merchantFoundID = null;
 
@@ -252,11 +252,11 @@ public class Home extends AppCompatActivity
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                if (!merchantFound) {
+                if (!merchantFound && requestBol) {
                     merchantFound = true;
                     merchantFoundID = key;
 
-                    DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("CustomerRequest");
+                    DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID);
                     String customerId = Common.currentUser.getPhone();
                     HashMap map = new HashMap();
                     map.put("customerOrderId", customerId);
@@ -333,8 +333,8 @@ public class Home extends AppCompatActivity
                     if (distance < 100) {
                         confirmLoc.setText("Merchant is within you vicinity");
                     } else {
-                        confirmLoc.setText("Liquor Store  Found: " + String.valueOf(distance));
-                        merchantMarker = mMap.addMarker(new MarkerOptions().position(merchantLatLng).title("Nearest Liquor Store").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_liquorcoltour)));
+                        confirmLoc.setText("Liquor Store  Found: " + String.valueOf(distance) + " Meters");
+                        merchantMarker = mMap.addMarker(new MarkerOptions().position(merchantLatLng).title("Nearest Liquor Store").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_liquorstore)));
                     }
                 }
 
@@ -396,6 +396,9 @@ public class Home extends AppCompatActivity
             Intent signOut_intent = new Intent(Home.this, CustomerLoginActivity.class);
             signOut_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(signOut_intent);
+        } else if (id == R.id.nav_profile) {
+            Intent profileIntent = new Intent(Home.this, UserProfile.class);
+            startActivity(profileIntent);
 
         }
 
@@ -411,7 +414,7 @@ public class Home extends AppCompatActivity
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(5000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
 
@@ -463,7 +466,7 @@ public class Home extends AppCompatActivity
             lastLocation = location;
             LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
             mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location"));
+            mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, 15);
             mMap.animateCamera(update);
 

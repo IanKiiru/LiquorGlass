@@ -37,7 +37,8 @@
         <activity android:name=".DrinksList" />
         <activity android:name=".DrinkDetails" />
         <activity android:name=".Cart" />
-        <activity android:name=".OrderStatus"></activity>
+        <activity android:name=".OrderStatus" />
+        <activity android:name=".UserProfile"></activity>
     </application>
 
 </manifest>
