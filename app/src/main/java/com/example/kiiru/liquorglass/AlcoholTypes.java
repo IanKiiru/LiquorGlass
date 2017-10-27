@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.example.kiiru.liquorglass.Interface.ItemClickListener;
 import com.example.kiiru.liquorglass.Model.AlcoholTypesModel;
 import com.example.kiiru.liquorglass.ViewHolder.AlcoholTypesMenuViewHolder;
+import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -47,8 +48,13 @@ public class AlcoholTypes extends AppCompatActivity {
                 startActivity(cart_intent);
             }
         });
-        
-        loadMenu();
+
+        if(Common.isConnectedToInternet(this))
+                loadMenu();
+        else {
+            Toast.makeText(AlcoholTypes.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+
+        }
     }
 
     private void loadMenu() {

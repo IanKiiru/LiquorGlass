@@ -8,30 +8,22 @@ import java.util.List;
 
 public class Request {
     private String phone;
-    private String name;
-    private String address;
-    private  String status;
+    private String fname;
+    private String lname;
+    private String status;
     private String total;
     private List<Order> Drinks; //list of drink orders
 
     public Request() {
     }
 
-    public Request(String phone, String name, String address, String total, List<Order> drinks) {
+    public Request(String phone, String fname, String lname, String total, List<Order> drinks) {
         this.phone = phone;
-        this.name = name;
-        this.address = address;
+        this.fname = fname;
+        this.lname = lname;
         this.total = total;
         Drinks = drinks;
         this.status = "0"; // Default is 0, 0: Placed, 1: Shipping , 2: Shipped
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getPhone() {
@@ -42,20 +34,28 @@ public class Request {
         this.phone = phone;
     }
 
-    public String getName() {
-        return name;
+    public String getFname() {
+        return fname;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFname(String fname) {
+        this.fname = fname;
     }
 
-    public String getAddress() {
-        return address;
+    public String getLname() {
+        return lname;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setLname(String lname) {
+        this.lname = lname;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getTotal() {
@@ -74,3 +74,5 @@ public class Request {
         Drinks = drinks;
     }
 }
+
+

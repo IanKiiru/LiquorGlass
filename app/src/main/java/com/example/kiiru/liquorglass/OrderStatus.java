@@ -26,7 +26,7 @@ public class OrderStatus extends AppCompatActivity {
 
         // Initialize database
         orderDatabase = FirebaseDatabase.getInstance();
-        orderDatabaseRef =orderDatabase.getReference("Requests");
+        orderDatabaseRef =orderDatabase.getReference("customerRequest").child("itemsOrdered");
 
         //Load the menu
         orderRecycler = (RecyclerView) findViewById(R.id.listOrders);
@@ -51,7 +51,7 @@ public class OrderStatus extends AppCompatActivity {
 
                 viewHolder.txtOrderId.setText("Order Id: " +orderAdapter.getRef(position).getKey());
                 viewHolder.txtOrderStatus.setText("Order status: " +convertCodeToStatus(model.getStatus()));
-                viewHolder.txtOrderAddress.setText("Address: " +model.getAddress());
+                viewHolder.txtOrderAddress.setText("Address: " +model.getFname());
                 viewHolder.txtOrderPhone.setText("Phone number: " +model.getPhone());
                 viewHolder.customerName.setText("Name: " +Common.currentUser.getlName());
 

@@ -60,6 +60,8 @@ import org.w3c.dom.Text;
 import java.util.HashMap;
 import java.util.List;
 
+import io.paperdb.Paper;
+
 public class Home extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
@@ -77,6 +79,7 @@ public class Home extends AppCompatActivity
     private Boolean requestBol = false;
     private Marker deliveryMarker;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
+    private Marker userMarker;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -123,6 +126,10 @@ public class Home extends AppCompatActivity
 
         locationRef = FirebaseDatabase.getInstance().getReference();
         mapFragment = SupportMapFragment.newInstance();
+
+        //Init Paper
+
+        Paper.init(this);
         android.support.v4.app.FragmentManager sFm = getSupportFragmentManager();
         sFm.beginTransaction().add(R.id.mapCustomer, mapFragment).commit();
 
@@ -153,7 +160,7 @@ public class Home extends AppCompatActivity
                     merchantFound = false;
                     radius = 1;
                     String userId = Common.currentUser.getPhone();
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId).child("location");
                     GeoFire geoFire = new GeoFire(ref);
                     geoFire.removeLocation(userId);
 
@@ -169,12 +176,12 @@ public class Home extends AppCompatActivity
 
                     String userId = Common.currentUser.getPhone();
 
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId).child("location");
                     GeoFire geoFire = new GeoFire(ref);
                     geoFire.setLocation(userId, new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()));
 
                     customerLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                    deliveryMarker = mMap.addMarker(new MarkerOptions().position(customerLocation).title("Delivery to be made here"));
+                    deliveryMarker = mMap.addMarker(new MarkerOptions().position(customerLocation).title("Delivery to be made here").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
                     confirmLoc.setText("Finding liquor store ...");
                     getClosestStore();
                 }
@@ -332,6 +339,7 @@ public class Home extends AppCompatActivity
                     float distance = loc2.distanceTo(loc1);
                     if (distance < 100) {
                         confirmLoc.setText("Merchant is within you vicinity");
+                        merchantMarker = mMap.addMarker(new MarkerOptions().position(merchantLatLng).title("Nearest Liquor Store").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_liquorstore)));
                     } else {
                         confirmLoc.setText("Liquor Store  Found: " + String.valueOf(distance) + " Meters");
                         merchantMarker = mMap.addMarker(new MarkerOptions().position(merchantLatLng).title("Nearest Liquor Store").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_liquorstore)));
@@ -382,8 +390,6 @@ public class Home extends AppCompatActivity
             Intent alcohol_menuIntent = new Intent(Home.this, AlcoholTypes.class);
             startActivity(alcohol_menuIntent);
 
-
-            // Handle the camera action
         } else if (id == R.id.nav_cart) {
             Intent cart_intent = new Intent(Home.this, Cart.class);
             startActivity(cart_intent);
@@ -393,6 +399,7 @@ public class Home extends AppCompatActivity
             startActivity(order_intent);
 
         } else if (id == R.id.nav_logout) {
+            Paper.book().destroy();
             Intent signOut_intent = new Intent(Home.this, CustomerLoginActivity.class);
             signOut_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(signOut_intent);
@@ -409,7 +416,6 @@ public class Home extends AppCompatActivity
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(5000);
@@ -465,8 +471,10 @@ public class Home extends AppCompatActivity
         public void onLocationChanged (Location location){
             lastLocation = location;
             LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-            mMap.clear();
-            mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
+            if (deliveryMarker != null) {
+                deliveryMarker.remove();
+            }
+            deliveryMarker = mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, 15);
             mMap.animateCamera(update);
 

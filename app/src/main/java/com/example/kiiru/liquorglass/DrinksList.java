@@ -1,6 +1,7 @@
 package com.example.kiiru.liquorglass;
 
 import android.content.Intent;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,6 +14,7 @@ import android.widget.Toast;
 import com.example.kiiru.liquorglass.Interface.ItemClickListener;
 import com.example.kiiru.liquorglass.Model.DrinksModel;
 import com.example.kiiru.liquorglass.ViewHolder.DrinksListViewHolder;
+import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -29,6 +31,7 @@ public class DrinksList extends AppCompatActivity {
 
     FirebaseDatabase drinksDatabase;
     DatabaseReference drinksRef;
+    FloatingActionButton viewCartFab;
     RecyclerView drinksRecycler_view;
     RecyclerView.LayoutManager drinksLayoutManager;
 
@@ -50,17 +53,36 @@ public class DrinksList extends AppCompatActivity {
         drinksDatabase = FirebaseDatabase.getInstance();
         drinksRef =drinksDatabase.getReference("Drinks");
 
+
+        //Cart Floating Action Button
+        viewCartFab = (FloatingActionButton) findViewById(R.id.viewCart_drinksList);
+        viewCartFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent cart_intent = new Intent(DrinksList.this, Cart.class);
+                startActivity(cart_intent);
+            }
+        });
+
         //Load the menu
         drinksRecycler_view = (RecyclerView) findViewById(R.id.drinksList_recycler);
         drinksRecycler_view.setHasFixedSize(true);
         drinksLayoutManager = new LinearLayoutManager(this);
         drinksRecycler_view.setLayoutManager(drinksLayoutManager);
 
+
+
         if(getIntent() !=null)
             alcoholTypeID = getIntent().getStringExtra("AlcoholTypesId");
 
         if (!alcoholTypeID.isEmpty() && alcoholTypeID !=null){
-            loadListDrinks(alcoholTypeID);
+
+            if (Common.isConnectedToInternet(getBaseContext()))
+                    loadListDrinks(alcoholTypeID);
+            else {
+                Toast.makeText(DrinksList.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+
+            }
         }
 
         materialSearchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
@@ -80,7 +102,7 @@ public class DrinksList extends AppCompatActivity {
                 List<String> suggestion = new ArrayList<>();
                 for (String search:suggestionList)
                 {
-                    if (search.toLowerCase().contains(materialSearchBar.getText().toString()))
+                    if (search.toLowerCase().contains(materialSearchBar.getText().toLowerCase()))
                         suggestion.add(search);
                 }
                 materialSearchBar.setLastSuggestions(suggestion);

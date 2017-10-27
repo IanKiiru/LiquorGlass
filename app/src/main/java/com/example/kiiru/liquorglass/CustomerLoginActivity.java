@@ -9,6 +9,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -23,11 +24,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
+import io.paperdb.Paper;
+
 public class CustomerLoginActivity extends AppCompatActivity {
 
     private MaterialEditText phone_editText, password_editText;
     private Button loginBtn;
     private RelativeLayout loginRelativeLayout;
+    com.rey.material.widget.CheckBox checkBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,12 @@ public class CustomerLoginActivity extends AppCompatActivity {
         phone_editText = (MaterialEditText) findViewById(R.id.edt_Phone);
         password_editText = (MaterialEditText) findViewById(R.id.edt_password);
         loginRelativeLayout = (RelativeLayout) findViewById(R.id.loginRelative_layout);
+        checkBox = (com.rey.material.widget.CheckBox) findViewById(R.id.chkBoxRemember);
+
+
+        // Init Paper
+
+        Paper.init(this);
 
         loginRelativeLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,55 +85,67 @@ public class CustomerLoginActivity extends AppCompatActivity {
     final DatabaseReference table_users = cDatabase.getReference().child("Users").child("Customers");
 
 
-    public void signIn(View view){
-        final ProgressDialog mProgressDialog = new ProgressDialog(CustomerLoginActivity.this);
-        mProgressDialog.setMessage("Please wait...");
-        mProgressDialog.show();
+    public void signIn(View view) {
 
-        final String phone = phone_editText.getText().toString();
-        final String password = password_editText.getText().toString();
+        if (Common.isConnectedToInternet(getBaseContext())) {
 
-        if (phone.equals("") || password.equals("")) {
-            AlertDialog.Builder cLoginBuilder = new AlertDialog.Builder(CustomerLoginActivity.this);
-            cLoginBuilder.setTitle("Something went wrong...");
-            cLoginBuilder.setMessage("Some fields were left missing");
-            AlertDialog alertDialog = cLoginBuilder.create();
-            alertDialog.show();
-            mProgressDialog.dismiss();
-        }else {
-            table_users.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    //Check if user exists in database
-                    if (dataSnapshot.child(phone_editText.getText().toString()).exists()) {
-                        //Get User Information
-                        mProgressDialog.dismiss();
-                        User user = dataSnapshot.child(phone_editText.getText().toString()).getValue(User.class);
-                        user.setPhone(phone_editText.getText().toString()); //set Phone
+            if (checkBox.isChecked()){
+                Paper.book().write(Common.USER_KEY, phone_editText.getText().toString());
+                Paper.book().write(Common.PWD_KEY, password_editText.getText().toString());
 
-                        if (user.getPassword().equals(password_editText.getText().toString())) {
-                            Toast.makeText(CustomerLoginActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
-                            Intent home_intent = new Intent(CustomerLoginActivity.this, Home.class);
-                            Common.currentUser = user;
-                            startActivity(home_intent);
+            }
+            final ProgressDialog mProgressDialog = new ProgressDialog(CustomerLoginActivity.this);
+            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.show();
+
+            final String phone = phone_editText.getText().toString();
+            final String password = password_editText.getText().toString();
+
+            if (phone.equals("") || password.equals("")) {
+                AlertDialog.Builder cLoginBuilder = new AlertDialog.Builder(CustomerLoginActivity.this);
+                cLoginBuilder.setTitle("Something went wrong...");
+                cLoginBuilder.setMessage("Some fields were left missing");
+                AlertDialog alertDialog = cLoginBuilder.create();
+                alertDialog.show();
+                mProgressDialog.dismiss();
+            } else {
+                table_users.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        //Check if user exists in database
+                        if (dataSnapshot.child(phone_editText.getText().toString()).exists()) {
+                            //Get User Information
+                            mProgressDialog.dismiss();
+                            User user = dataSnapshot.child(phone_editText.getText().toString()).getValue(User.class);
+                            user.setPhone(phone_editText.getText().toString()); //set Phone
+
+                            if (user.getPassword().equals(password_editText.getText().toString())) {
+                                Toast.makeText(CustomerLoginActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
+                                Intent alcoholTypes_intent = new Intent(CustomerLoginActivity.this, AlcoholTypes.class);
+                                Common.currentUser = user;
+                                startActivity(alcoholTypes_intent);
+                            } else {
+                                Toast.makeText(CustomerLoginActivity.this, "Wrong password", Toast.LENGTH_SHORT).show();
+
+                            }
                         } else {
-                            Toast.makeText(CustomerLoginActivity.this, "Wrong password", Toast.LENGTH_SHORT).show();
+                            mProgressDialog.dismiss();
+                            Toast.makeText(CustomerLoginActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
 
                         }
-                    } else {
-                        mProgressDialog.dismiss();
-                        Toast.makeText(CustomerLoginActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
+
 
                     }
 
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
 
-                }
+                    }
+                });
+            }
+        } else {
+            Toast.makeText(CustomerLoginActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
         }
     }
 }

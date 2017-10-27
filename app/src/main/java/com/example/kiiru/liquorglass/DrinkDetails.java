@@ -13,6 +13,7 @@ import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton;
 import com.example.kiiru.liquorglass.Database.Database;
 import com.example.kiiru.liquorglass.Model.DrinksModel;
 import com.example.kiiru.liquorglass.Model.Order;
+import com.example.kiiru.liquorglass.common.Common;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -76,7 +77,13 @@ public class DrinkDetails extends AppCompatActivity {
             drinkId = getIntent().getStringExtra("DrinkId");
 
         if (!drinkId.isEmpty()){
-            getDrinkDetails(drinkId);
+
+            if (Common.isConnectedToInternet(getBaseContext()))
+                    getDrinkDetails(drinkId);
+            else {
+                Toast.makeText(DrinkDetails.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+
+            }
         }
 
     }

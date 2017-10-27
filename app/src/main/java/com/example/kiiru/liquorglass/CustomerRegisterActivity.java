@@ -80,66 +80,70 @@ public class CustomerRegisterActivity extends AppCompatActivity {
     final FirebaseDatabase cDatabase = FirebaseDatabase.getInstance();
     final DatabaseReference table_users = cDatabase.getReference().child("Users").child("Customers");
 
-    public void signUp(View view){
-        final ProgressDialog mProgressDialog = new ProgressDialog(CustomerRegisterActivity.this);
-        mProgressDialog.setMessage("Please wait...");
-        mProgressDialog.show();
+    public void signUp(View view) {
+        if (Common.isConnectedToInternet(getBaseContext())) {
+            final ProgressDialog mProgressDialog = new ProgressDialog(CustomerRegisterActivity.this);
+            mProgressDialog.setMessage("Please wait...");
+            mProgressDialog.show();
 
-        final String fname = fName_editText.getText().toString();
-        final String lname = lName_editText.getText().toString();
-        final String phone = regPhone_editText.getText().toString();
-        final String email = regEmail_editText.getText().toString();
-        final String password = regPassword_editText.getText().toString();
-        final String confirmPassword = retypePass_editText.getText().toString();
+            final String fname = fName_editText.getText().toString();
+            final String lname = lName_editText.getText().toString();
+            final String phone = regPhone_editText.getText().toString();
+            final String email = regEmail_editText.getText().toString();
+            final String password = regPassword_editText.getText().toString();
+            final String confirmPassword = retypePass_editText.getText().toString();
 
-        if (email.equals("") || password.equals("") || confirmPassword.equals("") || fname.equals("") || lname.equals("") || phone.equals("")) {
-            AlertDialog.Builder cLoginBuilder = new AlertDialog.Builder(CustomerRegisterActivity.this);
-            cLoginBuilder.setTitle("Something went wrong...");
-            cLoginBuilder.setMessage("Some fields were left missing");
-            AlertDialog alertDialog = cLoginBuilder.create();
-            alertDialog.show();
-            mProgressDialog.dismiss();
+            if (email.equals("") || password.equals("") || confirmPassword.equals("") || fname.equals("") || lname.equals("") || phone.equals("")) {
+                AlertDialog.Builder cLoginBuilder = new AlertDialog.Builder(CustomerRegisterActivity.this);
+                cLoginBuilder.setTitle("Something went wrong...");
+                cLoginBuilder.setMessage("Some fields were left missing");
+                AlertDialog alertDialog = cLoginBuilder.create();
+                alertDialog.show();
+                mProgressDialog.dismiss();
 
-        } else if (!(password.equals(confirmPassword))) {
-            AlertDialog.Builder cLoginBuilder = new AlertDialog.Builder(CustomerRegisterActivity.this);
-            cLoginBuilder.setTitle("Something went wrong...");
-            cLoginBuilder.setMessage("Your Passwords are not matching.");
-            AlertDialog alertDialog = cLoginBuilder.create();
-            alertDialog.show();
-            mProgressDialog.dismiss();
-        } else if (password.length() < 6) {
-            Toast.makeText(CustomerRegisterActivity.this, "Password is too short, enter a minimum of 6 characters!", Toast.LENGTH_SHORT).show();
+            } else if (!(password.equals(confirmPassword))) {
+                AlertDialog.Builder cLoginBuilder = new AlertDialog.Builder(CustomerRegisterActivity.this);
+                cLoginBuilder.setTitle("Something went wrong...");
+                cLoginBuilder.setMessage("Your Passwords are not matching.");
+                AlertDialog alertDialog = cLoginBuilder.create();
+                alertDialog.show();
+                mProgressDialog.dismiss();
+            } else if (password.length() < 6) {
+                Toast.makeText(CustomerRegisterActivity.this, "Password is too short, enter a minimum of 6 characters!", Toast.LENGTH_SHORT).show();
 
-        } else {
-            table_users.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.child(regPhone_editText.getText().toString()).exists()) {
+            } else {
+                table_users.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.child(regPhone_editText.getText().toString()).exists()) {
 
-                        mProgressDialog.dismiss();
-                        Toast.makeText(CustomerRegisterActivity.this, "User already exists", Toast.LENGTH_SHORT).show();
+                            mProgressDialog.dismiss();
+                            Toast.makeText(CustomerRegisterActivity.this, "User already exists", Toast.LENGTH_SHORT).show();
 
-                    } else {
+                        } else {
 
-                        mProgressDialog.dismiss();
-                        User user = new User(phone, fname, lname, email, confirmPassword);
-                        table_users.child(phone).setValue(user);
-                        Toast.makeText(CustomerRegisterActivity.this, "Sign up successful", Toast.LENGTH_SHORT).show();
-                        Intent login_intent = new Intent(CustomerRegisterActivity.this, CustomerLoginActivity.class);
-                        startActivity(login_intent);
-                        finish();
+                            mProgressDialog.dismiss();
+                            User user = new User(phone, fname, lname, email, confirmPassword);
+                            table_users.child(phone).setValue(user);
+                            Toast.makeText(CustomerRegisterActivity.this, "Sign up successful", Toast.LENGTH_SHORT).show();
+                            Intent login_intent = new Intent(CustomerRegisterActivity.this, CustomerLoginActivity.class);
+                            startActivity(login_intent);
+                            finish();
+
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
 
                     }
-                }
+                });
+            }
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
 
-                }
-            });
+        } else {
+            Toast.makeText(CustomerRegisterActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+
         }
-
-
-
     }
 }

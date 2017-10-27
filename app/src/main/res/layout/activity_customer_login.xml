@@ -57,11 +57,10 @@
             android:id="@+id/chkBoxRemember"
             style="@style/Material.Drawable.CheckBox"
             android:text="Remember Me"
-            app:cbd_tickerColor = "@color/colorPrimaryDark"
-
             android:gravity="center_vertical"
-            android:textColor="@color/colorPrimary"/>
-
+            app:cbd_strokeColor="@color/colorPrimary"
+            android:textColor="@color/colorPrimaryDark"
+            app:cbd_tickColor="@color/colorAccent" />
 
 
     </LinearLayout>
