@@ -2,9 +2,14 @@ package com.example.kiiru.liquorglass;
 
 import android.*;
 import android.Manifest;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,9 +28,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -55,10 +63,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.paperdb.Paper;
 
@@ -66,7 +78,7 @@ public class Home extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private FirebaseDatabase cDatabase;
-    private TextView txtFullName;
+    private TextView txtFullName, deliveryLocation, merchantName, merchantPhone;
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
     private SupportMapFragment mapFragment;
@@ -79,7 +91,12 @@ public class Home extends AppCompatActivity
     private Boolean requestBol = false;
     private Marker deliveryMarker;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
-    private Marker userMarker;
+    PlaceAutocompleteFragment autocompleteFragment;
+    double lat, lng;
+    private LinearLayout merchantInfo;
+
+    private ImageView merchantProfileImage;
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -124,6 +141,14 @@ public class Home extends AppCompatActivity
         toolbar.setTitle("Home");
         setSupportActionBar(toolbar);
 
+        merchantInfo = (LinearLayout) findViewById(R.id.merchantInfo);
+
+        merchantProfileImage = (ImageView) findViewById(R.id.merchantProfileImage);
+
+        merchantName = (TextView) findViewById(R.id.merchantName);
+        merchantPhone = (TextView) findViewById(R.id.merchantPhone);
+        deliveryLocation = (TextView) findViewById(R.id.deliveryLocation);
+
         locationRef = FirebaseDatabase.getInstance().getReference();
         mapFragment = SupportMapFragment.newInstance();
 
@@ -139,6 +164,8 @@ public class Home extends AppCompatActivity
         } else {
             mapFragment.getMapAsync(this);
         }
+
+
 
 
         confirmLoc = (Button) findViewById(R.id.confirm_locationBtn);
@@ -171,6 +198,8 @@ public class Home extends AppCompatActivity
                         merchantMarker.remove();
                     }
                     confirmLoc.setText("CONFIRM LOCATION");
+                    merchantInfo.setVisibility(View.GONE);
+                  //  confirmLoc.setVisibility(View.VISIBLE);
                 } else {
                     requestBol = true;
 
@@ -215,8 +244,10 @@ public class Home extends AppCompatActivity
         txtFullName = (TextView) headerLayout.findViewById(R.id.txtFullName);
         txtFullName.setText(Common.currentUser.getfName());
 
-        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+        autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autocompleteFragment.setHint("Enter your destination");
+
 
 
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
@@ -271,6 +302,7 @@ public class Home extends AppCompatActivity
                     merchantRef.updateChildren(map);
 
                     getMerchantLocation();
+                    getMerchantInfo();
                     confirmLoc.setText("Looking for store's Location....");
                 }
 
@@ -298,6 +330,42 @@ public class Home extends AppCompatActivity
             @Override
             public void onGeoQueryError(DatabaseError error) {
 
+            }
+        });
+    }
+
+    private void getMerchantInfo(){
+        final ProgressDialog mProgressDialog = new ProgressDialog(Home.this);
+        mProgressDialog.setTitle("Fetching Customer information...");
+        mProgressDialog.setMessage("Please wait...");
+        mProgressDialog.show();
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID);
+        mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
+                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    if(map.get("destination")!=null){
+                        deliveryLocation.setText("Delivery Location: " +map.get("destination").toString());
+                    }
+                    if(map.get("fName")!=null){
+                        merchantName.setText("Name: " +map.get("fName").toString());
+                    }
+                    if(map.get("phone")!=null){
+                        merchantPhone.setText("Phone: "+map.get("phone").toString());
+                    }
+                    if(map.get("profileImageUrl")!=null){
+                        Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(merchantProfileImage);
+                    }
+                    mProgressDialog.dismiss();
+                   // confirmLoc.setVisibility(View.GONE);
+                    merchantInfo.setVisibility(View.VISIBLE);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
             }
         });
     }
@@ -429,6 +497,7 @@ public class Home extends AppCompatActivity
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
 
 
+
     }
 
     @Override
@@ -455,6 +524,9 @@ public class Home extends AppCompatActivity
         mMap.setMyLocationEnabled(true);
 
 
+
+
+
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -470,14 +542,68 @@ public class Home extends AppCompatActivity
         @Override
         public void onLocationChanged (Location location){
             lastLocation = location;
+            lat = location.getLatitude();
+            lng = location.getLongitude();
             LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-            if (deliveryMarker != null) {
-                deliveryMarker.remove();
+            if (deliveryMarker == null) {
+                deliveryMarker = mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
+                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, 15);
+                mMap.animateCamera(update);
+
+                new GetAddress().execute(String.format("%.4f,%.4f", lat, lng));
             }
-            deliveryMarker = mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
-            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, 15);
-            mMap.animateCamera(update);
 
         }
+
+    private class GetAddress extends AsyncTask<String,Void,String>{
+        ProgressDialog dialog = new ProgressDialog(Home.this);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialog.setMessage("Please wait...");
+            dialog.setCanceledOnTouchOutside(false);
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            try{
+                double lat = Double.parseDouble(params[0].split(",")[0]);
+                double lng = Double.parseDouble(params[0].split(",")[1]);
+                String response;
+                HttpDataHandler http = new HttpDataHandler();
+                String url = String.format("https://maps.googleapis.com/maps/api/geocode/json?latlng=%.4f,%.4f&sensor=false",lat,lng);
+                response = http.GetHTTPData(url);
+                return response;
+            } catch (Exception ex)
+            {
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            try{
+                JSONObject jsonObject = new JSONObject(s);
+
+                String address = ((JSONArray)jsonObject.get("results")).getJSONObject(0).get("formatted_address").toString();
+               if (destination == null) {
+                   destination = address;
+                   autocompleteFragment.setText(address);
+               } else if (destination != null){
+                   Toast.makeText(Home.this, "Your destination is " +destination, Toast.LENGTH_SHORT).show();
+               }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            if(dialog.isShowing())
+                dialog.dismiss();
+        }
+    }
     }
 

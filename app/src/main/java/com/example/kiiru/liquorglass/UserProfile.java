@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.kiiru.liquorglass.common.Common;
@@ -72,7 +73,14 @@ public class UserProfile extends AppCompatActivity {
         userID = Common.currentUser.getPhone();
         mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Customers").child(userID);
 
-        getUserInfo();
+        if (Common.isConnectedToInternet(this))
+             getUserInfo();
+        else {
+            Toast.makeText(UserProfile.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+
+        }
+
+
 
         profileImageView.setOnClickListener(new View.OnClickListener() {
             @Override

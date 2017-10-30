@@ -27,6 +27,61 @@
             android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
             tools:layout="@layout/place_autocomplete_fragment" />
     </android.support.v7.widget.CardView>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/merchantInfo"
+        android:orientation="horizontal"
+        android:layout_above="@+id/confirm_locationBtn"
+        android:background="@drawable/side_nav_bar"
+        android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <android.support.v7.widget.CardView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_margin="6dp">
+            <ImageView
+                android:layout_width="100sp"
+                android:layout_height="100sp"
+                android:id="@+id/merchantProfileImage"
+                android:src="@mipmap/ic_default_user" />
+        </android.support.v7.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="30sp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:id="@+id/deliveryLocation"
+                android:paddingBottom="10sp"
+                android:text="Delivery Location"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/merchantName"
+                android:textStyle="bold"
+                android:text="Merchant Name"
+                android:paddingBottom="10sp"
+                android:paddingTop="20sp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:id="@+id/merchantPhone"
+                android:text="Merchant Phone"
+                android:paddingBottom="10sp"
+                android:paddingTop="20sp"/>
+        </LinearLayout>
+    </LinearLayout>
+    </LinearLayout>
 
     <info.hoang8f.widget.FButton
         android:layout_width="match_parent"
