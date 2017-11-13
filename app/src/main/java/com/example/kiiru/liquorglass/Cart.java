@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -16,16 +17,30 @@ import android.widget.Toast;
 
 
 import com.example.kiiru.liquorglass.Database.Database;
+import com.example.kiiru.liquorglass.Model.MyResponse;
+import com.example.kiiru.liquorglass.Model.Notification;
 import com.example.kiiru.liquorglass.Model.Order;
 import com.example.kiiru.liquorglass.Model.Request;
+import com.example.kiiru.liquorglass.Model.Sender;
+import com.example.kiiru.liquorglass.Model.Token;
+import com.example.kiiru.liquorglass.Remote.APIService;
 import com.example.kiiru.liquorglass.common.Common;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 
 public class Cart extends AppCompatActivity {
 
@@ -40,10 +55,15 @@ public class Cart extends AppCompatActivity {
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
 
+    APIService mService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
+
+        //Init service
+        mService = Common.getFCMService();
 
         //Initialize Firebase
         String userId = Common.currentUser.getPhone();
@@ -75,6 +95,9 @@ public class Cart extends AppCompatActivity {
         loadListDrinks();
     }
 
+    public static String order_number = String.valueOf(System.currentTimeMillis());
+
+
     private void showAlertDialog(){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(Cart.this);
         alertDialog.setTitle("One More Step...");
@@ -92,13 +115,17 @@ public class Cart extends AppCompatActivity {
                         totalTxtView.getText().toString(),
                         cart);
 
+
+
                 // Submitting request to Firebase
                 // Using System.currentTimeMillis to key
-                requestsRef.child(String.valueOf(System.currentTimeMillis()))
+                requestsRef.child(order_number)
                         .setValue(request);
 
                 new Database(getBaseContext()).cleanCart();
-                Toast.makeText(Cart.this, "Pick a delivery location", Toast.LENGTH_SHORT).show();
+
+                sendNotificationOfOrder(order_number);
+
                 Intent home_intent = new Intent(Cart.this, Home.class);
                 startActivity(home_intent);
                 finish();
@@ -117,6 +144,54 @@ public class Cart extends AppCompatActivity {
 
 
 
+    }
+
+    private void sendNotificationOfOrder(final String order_number) {
+        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference("Tokens");
+        Query data = tokens.orderByChild("merchantToken").equalTo(true);
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
+                {
+                    Token merchantToken = postSnapshot.getValue(Token.class);
+
+
+                    //Creating raw payload to send
+
+                    Notification notification = new Notification("LIQUOR GLASS", "You have a new order "+order_number);
+                    Sender content = new Sender(merchantToken.getToken(), notification);
+
+                    mService.sendNotification(content)
+                            .enqueue(new Callback<MyResponse>() {
+                                @Override
+                                public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                                    if (response.code() == 200){
+                                    if (response.body().success == 1) {
+                                        Toast.makeText(Cart.this, "Order placed", Toast.LENGTH_SHORT).show();
+                                        finish();
+                                    } else {
+                                        Toast.makeText(Cart.this, "Failed", Toast.LENGTH_SHORT).show();
+
+                                    }
+                                }
+                                }
+
+                                @Override
+                                public void onFailure(Call<MyResponse> call, Throwable t) {
+                                    Log.e("ERROR", t.getMessage());
+
+                                }
+                            });
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void loadListDrinks() {

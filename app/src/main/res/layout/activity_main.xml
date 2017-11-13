@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/rootLayout"
     android:background="@drawable/liquor_glass_background"
     tools:context="com.example.kiiru.liquorglass.MainActivity">
 
@@ -11,53 +12,58 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_centerInParent="true">
-
+        android:layout_marginTop="30dp"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal">
 
         <TextView
-            android:layout_width="200dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textSize="25sp"
-            android:text="@string/txt_slogan"
-            android:id="@+id/txtSlogan"
+            android:text="L I Q U O R "
+            android:textSize="36sp"
+            android:textAlignment="center"
             android:textColor="@android:color/white"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="G L A S S"
+            android:textSize="36sp"
+            android:layout_marginTop="14dp"
+            android:textAlignment="center"
+            android:textColor="@android:color/white"/>
+
     </LinearLayout>
+
     
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:weightSum="2"
+        android:layout_margin="13dp"
         android:orientation="horizontal">
-        
-        <info.hoang8f.widget.FButton
+
+        <Button
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/btn_signUp"
-            android:text="@string/btn_register"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
-            app:buttonColor="@color/btn_register"
-            app:shadowColor="@color/colorPrimaryDark"
-            app:shadowEnabled="true"
-            app:shadowHeight="3dp"
-            app:cornerRadius="4dp"
-            android:layout_margin="8dp"
-            />
-        <info.hoang8f.widget.FButton
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
             android:id="@+id/btn_signIn"
-            android:text="@string/btn_login"
+            android:background="@drawable/btn_sign_in_background"
+            android:textColor="@color/colorAccent"
+            android:text="SIGN IN"
+            android:layout_marginRight="6dp"
+            />
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@android:color/white"
-            app:buttonColor="@color/btn_login"
-            app:shadowColor="@color/colorPrimaryDark"
-            app:shadowEnabled="true"
-            app:shadowHeight="3dp"
-            app:cornerRadius="4dp"
-            android:layout_margin="8dp"
+            android:id="@+id/btn_signUp"
+            android:background="@drawable/btn_register_background"
+            android:textColor="@color/colorAccent"
+            android:text="REGISTER"
+            android:layout_marginLeft="6dp"
             />
 
 

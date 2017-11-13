@@ -34,6 +34,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.RoutingListener;
+import com.example.kiiru.liquorglass.Model.Request;
 import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -68,14 +72,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import io.paperdb.Paper;
 
+import static com.example.kiiru.liquorglass.Cart.order_number;
+
 public class Home extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, RoutingListener {
 
     private FirebaseDatabase cDatabase;
     private TextView txtFullName, deliveryLocation, merchantName, merchantPhone;
@@ -87,7 +94,7 @@ public class Home extends AppCompatActivity
     Location lastLocation;
     Button confirmLoc;
     private LatLng customerLocation;
-    private String destination;
+    String destination;
     private Boolean requestBol = false;
     private Marker deliveryMarker;
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
@@ -301,6 +308,16 @@ public class Home extends AppCompatActivity
                     map.put("destination", destination);
                     merchantRef.updateChildren(map);
 
+                    DatabaseReference destinationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("orderDetails").child(order_number);
+                    HashMap destinationMap = new HashMap();
+                    destinationMap.put("address", destination);
+                    destinationRef.updateChildren(destinationMap);
+
+
+
+
+
+
                     getMerchantLocation();
                     getMerchantInfo();
                     confirmLoc.setText("Looking for store's Location....");
@@ -333,6 +350,7 @@ public class Home extends AppCompatActivity
             }
         });
     }
+
 
     private void getMerchantInfo(){
         final ProgressDialog mProgressDialog = new ProgressDialog(Home.this);
@@ -468,7 +486,7 @@ public class Home extends AppCompatActivity
 
         } else if (id == R.id.nav_logout) {
             Paper.book().destroy();
-            Intent signOut_intent = new Intent(Home.this, CustomerLoginActivity.class);
+            Intent signOut_intent = new Intent(Home.this, MainActivity.class);
             signOut_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(signOut_intent);
         } else if (id == R.id.nav_profile) {
@@ -554,6 +572,26 @@ public class Home extends AppCompatActivity
             }
 
         }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> arrayList, int i) {
+
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
 
     private class GetAddress extends AsyncTask<String,Void,String>{
         ProgressDialog dialog = new ProgressDialog(Home.this);

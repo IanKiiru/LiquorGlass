@@ -9,8 +9,16 @@ import com.example.kiiru.liquorglass.Model.Request;
 import com.example.kiiru.liquorglass.ViewHolder.OrderViewHolder;
 import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.Map;
+
+import static com.example.kiiru.liquorglass.Cart.order_number;
+
 
 public class OrderStatus extends AppCompatActivity {
     FirebaseDatabase orderDatabase;
@@ -19,14 +27,20 @@ public class OrderStatus extends AppCompatActivity {
     RecyclerView.LayoutManager orderLayoutManager;
     FirebaseRecyclerAdapter<Request, OrderViewHolder> orderAdapter;
 
+
+    String userId = Common.currentUser.getPhone();
+    String destination;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_order_status);
 
-        // Initialize database
+
+
+                // Initialize database
         orderDatabase = FirebaseDatabase.getInstance();
-        orderDatabaseRef =orderDatabase.getReference("customerRequest").child("itemsOrdered");
+        orderDatabaseRef =orderDatabase.getReference("customerRequest").child(userId).child("orderDetails");
 
         //Load the menu
         orderRecycler = (RecyclerView) findViewById(R.id.listOrders);
@@ -35,7 +49,31 @@ public class OrderStatus extends AppCompatActivity {
         orderRecycler.setLayoutManager(orderLayoutManager);
 
         loadOrders(Common.currentUser.getPhone());
+
     }
+    DatabaseReference destinationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(userId).child("orderDetails").child(order_number);
+    ValueEventListener destinationRefListener = destinationRef.addValueEventListener(new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0) {
+                Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                if (map.get("address") != null) {
+                    destination = map.get("address").toString();
+
+
+                }
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    });
+
+    String firstName = Common.currentUser.getfName();
+    String lastName = Common.currentUser.getlName();
+
 
     private void loadOrders(String phone) {
 
@@ -50,10 +88,10 @@ public class OrderStatus extends AppCompatActivity {
             protected void populateViewHolder(OrderViewHolder viewHolder, Request model, int position) {
 
                 viewHolder.txtOrderId.setText("Order Id: " +orderAdapter.getRef(position).getKey());
-                viewHolder.txtOrderStatus.setText("Order status: " +convertCodeToStatus(model.getStatus()));
-                viewHolder.txtOrderAddress.setText("Address: " +model.getFname());
+                viewHolder.txtOrderStatus.setText("Order status: " +Common.convertCodeToStatus(model.getStatus()));
+                viewHolder.txtOrderAddress.setText("Address: " +destination);
                 viewHolder.txtOrderPhone.setText("Phone number: " +model.getPhone());
-                viewHolder.customerName.setText("Name: " +Common.currentUser.getlName());
+                viewHolder.customerName.setText("Name: " +firstName +" " +lastName);
 
 
 
@@ -63,14 +101,4 @@ public class OrderStatus extends AppCompatActivity {
         orderRecycler.setAdapter(orderAdapter);
     }
 
-    private String convertCodeToStatus(String status) {
-        if(status.equals("0"))
-            return "Placed";
-
-        else if (status.equals("1"))
-            return "Order is on its way";
-
-        else
-            return "Delivered";
-    }
 }

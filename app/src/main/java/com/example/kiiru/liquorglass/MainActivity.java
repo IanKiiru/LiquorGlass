@@ -2,16 +2,26 @@ package com.example.kiiru.liquorglass;
 
 import android.*;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutCompat;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,19 +32,32 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.rengwuxian.materialedittext.MaterialEditText;
 
+import dmax.dialog.SpotsDialog;
 import io.paperdb.Paper;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 import static com.example.kiiru.liquorglass.Home.MY_PERMISSIONS_REQUEST_LOCATION;
 
 public class MainActivity extends AppCompatActivity {
 
     private Button btn_register, btn_login;
-    private TextView txtSlogan;
+    RelativeLayout rootLayout;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/Arkhip_font.ttf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_main);
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -42,27 +65,40 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
 
         }
-        txtSlogan = (TextView) findViewById(R.id.txtSlogan);
-        Typeface face = Typeface.createFromAsset(getAssets(), "fonts/Nabila.ttf");
-        txtSlogan.setTypeface(face);
+        rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
         btn_register = (Button) findViewById(R.id.btn_signUp);
         btn_login = (Button) findViewById(R.id.btn_signIn);
+
+        rootLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (v.getId() == R.id.rootLayout){
+                    InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                }
+
+            }
+        });
+
+
+
+
+
+
         // Init Paper
         Paper.init(this);
 
         btn_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent register_intent = new Intent(MainActivity.this, CustomerRegisterActivity.class);
-                startActivity(register_intent);
+                showRegisterDialog();
             }
         });
 
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent login_intent = new Intent(MainActivity.this, CustomerLoginActivity.class);
-                startActivity(login_intent);
+                showLoginDialog();
 
             }
         });
@@ -91,8 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (Common.isConnectedToInternet(getBaseContext())) {
 
-            final ProgressDialog mProgressDialog = new ProgressDialog(MainActivity.this);
-            mProgressDialog.setMessage("Please wait...");
+            final SpotsDialog mProgressDialog = new SpotsDialog(MainActivity.this);
             mProgressDialog.show();
             table_users.addValueEventListener(new ValueEventListener() {
                 @Override
@@ -128,6 +163,247 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         } else {
+            Toast.makeText(MainActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+
+        }
+    }
+
+    private void showLoginDialog() {
+        //Initialize the Firebase Database
+        final FirebaseDatabase cDatabase = FirebaseDatabase.getInstance();
+        final DatabaseReference table_users = cDatabase.getReference().child("Users").child("Customers");
+
+        if (Common.isConnectedToInternet(getBaseContext())) {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("SIGN IN ");
+        dialog.setMessage("Please use your phone to sign in");
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View login_layout = inflater.inflate(R.layout.layout_login, null);
+            dialog.setView(login_layout);
+
+        final MaterialEditText edtPhone = (MaterialEditText) login_layout.findViewById(R.id.edtLoginPhone);
+        final MaterialEditText edtPassword = (MaterialEditText) login_layout.findViewById(R.id.edtLoginPassword);
+            final com.rey.material.widget.CheckBox checkBox = (com.rey.material.widget.CheckBox) login_layout.findViewById(R.id.chkBoxRememberMe);
+
+
+
+
+        dialog.setPositiveButton("SIGN IN", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+               final SpotsDialog loginProgressDialog = new SpotsDialog(MainActivity.this);
+                loginProgressDialog.show();
+                if (checkBox.isChecked()) {
+                    Paper.book().write(Common.USER_KEY, edtPhone.getText().toString());
+                    Paper.book().write(Common.PWD_KEY, edtPassword.getText().toString());
+                }
+
+                if (TextUtils.isEmpty(edtPhone.getText().toString())) {
+                    loginProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Some fields were left missing...", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (TextUtils.isEmpty(edtPassword.getText().toString())) {
+                    loginProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Some fields were left missing...", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (edtPassword.getText().toString().length() < 6) {
+                    loginProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Password is too short", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                } else {
+
+                    table_users.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+                            //Check if user exists in database
+                            if (dataSnapshot.child(edtPhone.getText().toString()).exists()) {
+                                //Get User Information
+                                User user = dataSnapshot.child(edtPhone.getText().toString()).getValue(User.class);
+                                user.setPhone(edtPhone.getText().toString()); //set Phone
+
+                                if (user.getPassword().equals(edtPassword.getText().toString())) {
+                                    loginProgressDialog.dismiss();
+                                    Toast.makeText(MainActivity.this, "Sign in successful", Toast.LENGTH_SHORT).show();
+                                    Intent alcoholTypes_intent = new Intent(MainActivity.this, AlcoholTypes.class);
+                                    Common.currentUser = user;
+                                    startActivity(alcoholTypes_intent);
+                                } else {
+                                    loginProgressDialog.dismiss();
+                                    Toast.makeText(MainActivity.this, "Wrong password", Toast.LENGTH_SHORT).show();
+
+                                }
+                            } else {
+                                loginProgressDialog.dismiss();
+                                Toast.makeText(MainActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
+
+                            }
+
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+
+
+                        }
+                    });
+
+                }
+            }
+        });
+            dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+
+            dialog.show();
+
+    } else {
+
+            Toast.makeText(MainActivity.this, "Please check your internet connection", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    private void showRegisterDialog() {
+        if (Common.isConnectedToInternet(getBaseContext())) {
+        final FirebaseDatabase cDatabase = FirebaseDatabase.getInstance();
+        final DatabaseReference table_users = cDatabase.getReference().child("Users").child("Customers");
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle("REGISTER ");
+        dialog.setMessage("Please enter your details to register");
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View register_layout = inflater.inflate(R.layout.layout_register, null);
+            dialog.setView(register_layout);
+
+        final MaterialEditText edtEmail = (MaterialEditText) register_layout.findViewById(R.id.edtEmail);
+        final MaterialEditText edtFirstName = (MaterialEditText) register_layout.findViewById(R.id.edtFirstName);
+        final MaterialEditText edtLastName = (MaterialEditText) register_layout.findViewById(R.id.edtLastName);
+        final MaterialEditText edtPhone = (MaterialEditText) register_layout.findViewById(R.id.edtPhone);
+        final MaterialEditText edtPassword = (MaterialEditText) register_layout.findViewById(R.id.edtPassword);
+        final MaterialEditText edtConfirmPassword = (MaterialEditText) register_layout.findViewById(R.id.edtConfirmPassword);
+
+
+
+        dialog.setPositiveButton("REGISTER", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(final DialogInterface dialog, int which) {
+
+                dialog.dismiss();
+                final SpotsDialog regProgressDialog = new SpotsDialog(MainActivity.this);
+                regProgressDialog.show();
+
+                final String fname = edtFirstName.getText().toString();
+                final String lname = edtLastName.getText().toString();
+                final String phone = edtPhone.getText().toString();
+                final String email = edtEmail.getText().toString();
+                final String password = edtPassword.getText().toString();
+                final String confirmPassword = edtConfirmPassword.getText().toString();
+
+                if (TextUtils.isEmpty(edtEmail.getText().toString())) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Some fields were left missing", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (TextUtils.isEmpty(edtPhone.getText().toString())) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Please enter phone number", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (TextUtils.isEmpty(edtFirstName.getText().toString())) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Please enter your first name", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (TextUtils.isEmpty(edtLastName.getText().toString())) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Please enter your last name", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (TextUtils.isEmpty(edtPassword.getText().toString())) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Please enter password", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+
+                if (edtPassword.getText().toString().length() < 6) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Password is too short", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+                if (TextUtils.isEmpty(edtConfirmPassword.getText().toString())) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Please re-enter your password", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                }
+
+                if (!(edtConfirmPassword.getText().toString().equals(edtPassword.getText().toString()))) {
+                    regProgressDialog.dismiss();
+                    Snackbar.make(rootLayout, "Your passwords do not match", Snackbar.LENGTH_SHORT)
+                            .show();
+                    return;
+                } else {
+                    table_users.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+
+                            if (dataSnapshot.child(edtPhone.getText().toString()).exists()) {
+                                regProgressDialog.dismiss();
+                                Toast.makeText(MainActivity.this, "User already exists", Toast.LENGTH_SHORT).show();
+
+                            } else {
+                                User user = new User(phone, fname, lname, email, confirmPassword);
+                                table_users.child(phone).setValue(user);
+                                regProgressDialog.dismiss();
+                                Toast.makeText(MainActivity.this, "Sign up successful", Toast.LENGTH_SHORT).show();
+
+                                showLoginDialog();
+                                /*Intent alcoholTypesIntent = new Intent(MainActivity.this, AlcoholTypes.class);
+                                startActivity(alcoholTypesIntent);*/
+
+                            }
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+                }
+
+            }
+        });
+            dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+
+            dialog.show();
+    }  else {
             Toast.makeText(MainActivity.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
 
         }

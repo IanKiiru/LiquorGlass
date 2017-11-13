@@ -90,7 +90,7 @@
         android:text="@string/confirm_location"
         android:textColor="@android:color/white"
         android:layout_alignParentBottom="true"
-        app:buttonColor="@color/btn_login"
+        app:buttonColor="@color/colorAccent"
         app:shadowColor="@android:color/black"
         app:shadowEnabled="true"
         app:shadowHeight="5dp"

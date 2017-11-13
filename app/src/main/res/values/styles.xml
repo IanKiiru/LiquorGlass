@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -6,6 +6,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowFullscreen">true</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
@@ -18,7 +19,7 @@
         <item name="android:textStyle">normal</item>
     </style>
 
-    <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Material.Title">
+    <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Material.Title" tools:targetApi="lollipop">
         <item name="android:textColor">@color/colorPrimary</item>
         <item name="android:textStyle">normal</item>
     </style>

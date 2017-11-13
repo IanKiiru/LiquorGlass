@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#da0311</color>
-    <color name="colorPrimaryDark">#450103</color>
-    <color name="colorAccent">#37474F</color>
+    <color name="colorPrimary">#000000</color>
+    <color name="colorPrimaryDark">#757575</color>
+    <color name="colorAccent">#450103</color>
 
 
-    <color name="btn_register">#37474F</color>
-    <color name="btn_login">#363636</color>
+
+    <color name="rippleEffectColor">#D50000</color>
+    <color name="btnSignIn">#1fbad6</color>
+    <color name="btnRegister">#83838c</color>
+    <color name="txtSlogan">#D50000</color>
     <color name="profileDetails">#FFD600</color>
 
     <color name="overlayBackground">#7f333639</color>
+    <color name="txtSocialDiscovery">#450103</color>
     <color name="hint_editTextColor">#450103</color>
     <color name="overlayActionBar">#0e0d0e</color>
     <color name="fabBackgroundTint">#FFD600</color>
