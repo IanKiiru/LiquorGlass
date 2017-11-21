@@ -43,6 +43,7 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
     compile 'com.squareup.retrofit2:converter-gson:2.3.0'
     compile 'info.hoang8f:fbutton:1.0.5'
+    compile 'com.google.firebase:firebase-auth:11.0.4'
     compile 'com.google.android.gms:play-services:11.0.4'
     compile 'com.github.jd-alexander:library:1.1.0'
     compile 'com.google.firebase:firebase-storage:11.0.4'

@@ -52,6 +52,7 @@ public class UserProfile extends AppCompatActivity {
 
     private String mProfileImageUrl;
     private Uri resultUri;
+    FirebaseAuth auth;
 
 
     @Override
@@ -67,10 +68,12 @@ public class UserProfile extends AppCompatActivity {
 
         profileImageView = (ImageView) findViewById(R.id.profileImage);
 
+        auth = FirebaseAuth.getInstance();
+        userID = auth.getCurrentUser().getUid();
+
         backButton = (Button) findViewById(R.id.profileBack);
         saveButton = (Button) findViewById(R.id.profileSave);
 
-        userID = Common.currentUser.getPhone();
         mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Customers").child(userID);
 
         if (Common.isConnectedToInternet(this))

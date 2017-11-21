@@ -61,6 +61,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -101,8 +102,10 @@ public class Home extends AppCompatActivity
     PlaceAutocompleteFragment autocompleteFragment;
     double lat, lng;
     private LinearLayout merchantInfo;
+    private FirebaseAuth mAuth;
 
     private ImageView merchantProfileImage;
+    String customePhone , userId;
 
 
     @Override
@@ -165,6 +168,10 @@ public class Home extends AppCompatActivity
         android.support.v4.app.FragmentManager sFm = getSupportFragmentManager();
         sFm.beginTransaction().add(R.id.mapCustomer, mapFragment).commit();
 
+        mAuth = FirebaseAuth.getInstance();
+        customePhone = Common.currentUser.getPhone();
+        userId = mAuth.getCurrentUser().getUid();
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
@@ -181,36 +188,12 @@ public class Home extends AppCompatActivity
             public void onClick(View v) {
 
                 if (requestBol) {
-                    requestBol = false;
-                    geoQuery.removeAllListeners();
-                    merchantLocationRef.removeEventListener(merchantLocationRefListener);
+                    endRide();
 
-                    if (merchantFoundID != null) {
-                        DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerOrderId");
-                        merchantRef.removeValue();
-                        merchantFoundID = null;
-
-                    }
-                    merchantFound = false;
-                    radius = 1;
-                    String userId = Common.currentUser.getPhone();
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId).child("location");
-                    GeoFire geoFire = new GeoFire(ref);
-                    geoFire.removeLocation(userId);
-
-                    if (deliveryMarker != null) {
-                        deliveryMarker.remove();
-                    }
-                    if (merchantMarker != null) {
-                        merchantMarker.remove();
-                    }
-                    confirmLoc.setText("CONFIRM LOCATION");
-                    merchantInfo.setVisibility(View.GONE);
-                  //  confirmLoc.setVisibility(View.VISIBLE);
                 } else {
                     requestBol = true;
 
-                    String userId = Common.currentUser.getPhone();
+
 
                     DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId).child("location");
                     GeoFire geoFire = new GeoFire(ref);
@@ -279,6 +262,58 @@ public class Home extends AppCompatActivity
 
     }
 
+    private void endRide() {
+        requestBol = false;
+        geoQuery.removeAllListeners();
+        merchantLocationRef.removeEventListener(merchantLocationRefListener);
+        orderHasBeenShippedRef.removeEventListener(orderHasBeenShippedRefListener);
+
+        if (merchantFoundID != null) {
+            DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest");
+            merchantRef.removeValue();
+            merchantFoundID = null;
+
+        }
+        merchantFound = false;
+        radius = 1;
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId);
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.removeLocation("location");
+
+        if (deliveryMarker != null) {
+            deliveryMarker.remove();
+        }
+        if (merchantMarker != null) {
+            merchantMarker.remove();
+        }
+        confirmLoc.setText("CONFIRM LOCATION");
+        merchantInfo.setVisibility(View.GONE);
+
+    }
+
+    private DatabaseReference orderHasBeenShippedRef;
+    private ValueEventListener orderHasBeenShippedRefListener;
+    private void getOrderDelivered() {
+        orderHasBeenShippedRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest").child("customerOrderId");
+        orderHasBeenShippedRefListener = orderHasBeenShippedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+
+                } else {
+                    endRide();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+    }
 
 
     private int radius = 1;
@@ -301,25 +336,21 @@ public class Home extends AppCompatActivity
                     merchantFound = true;
                     merchantFoundID = key;
 
-                    DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID);
-                    String customerId = Common.currentUser.getPhone();
+                    DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest");
                     HashMap map = new HashMap();
-                    map.put("customerOrderId", customerId);
+                    map.put("customerOrderId", userId);
                     map.put("destination", destination);
                     merchantRef.updateChildren(map);
 
-                    DatabaseReference destinationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("orderDetails").child(order_number);
+                    DatabaseReference destinationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(userId).child("orderDetails").child(order_number);
                     HashMap destinationMap = new HashMap();
                     destinationMap.put("address", destination);
                     destinationRef.updateChildren(destinationMap);
 
 
-
-
-
-
                     getMerchantLocation();
                     getMerchantInfo();
+                    getOrderDelivered();
                     confirmLoc.setText("Looking for store's Location....");
                 }
 
@@ -362,10 +393,8 @@ public class Home extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
+                    deliveryLocation.setText("Destination: "+destination);
                     Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                    if(map.get("destination")!=null){
-                        deliveryLocation.setText("Delivery Location: " +map.get("destination").toString());
-                    }
                     if(map.get("fName")!=null){
                         merchantName.setText("Name: " +map.get("fName").toString());
                     }
@@ -376,7 +405,7 @@ public class Home extends AppCompatActivity
                         Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(merchantProfileImage);
                     }
                     mProgressDialog.dismiss();
-                   // confirmLoc.setVisibility(View.GONE);
+
                     merchantInfo.setVisibility(View.VISIBLE);
 
                 }

@@ -15,6 +15,7 @@ import com.example.kiiru.liquorglass.Model.Token;
 import com.example.kiiru.liquorglass.ViewHolder.AlcoholTypesMenuViewHolder;
 import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -27,6 +28,8 @@ public class AlcoholTypes extends AppCompatActivity {
     RecyclerView.LayoutManager layoutManager;
     FirebaseRecyclerAdapter<AlcoholTypesModel, AlcoholTypesMenuViewHolder> adapter;
     FloatingActionButton viewCartFab;
+    FirebaseAuth auth;
+    String userId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +38,9 @@ public class AlcoholTypes extends AppCompatActivity {
         // Initialize Firebase
         cDatabase = FirebaseDatabase.getInstance();
         alcoholTypes =cDatabase.getReference("AlcoholTypes");
+        auth = FirebaseAuth.getInstance();
+
+         userId = auth.getCurrentUser().getUid();
 
         //Load the menu
         alcoholRecycler_menu = (RecyclerView) findViewById(R.id.alcohol_recyclerMenu);
@@ -69,7 +75,7 @@ public class AlcoholTypes extends AppCompatActivity {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
         DatabaseReference tokens = db.getReference("Tokens");
         Token data = new Token(token,false);
-        tokens.child(Common.currentUser.getPhone()).setValue(data);
+        tokens.child(userId).setValue(data);
     }
 
     private void loadMenu() {

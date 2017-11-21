@@ -9,6 +9,7 @@ import com.example.kiiru.liquorglass.Model.Request;
 import com.example.kiiru.liquorglass.ViewHolder.OrderViewHolder;
 import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,9 +27,10 @@ public class OrderStatus extends AppCompatActivity {
     RecyclerView orderRecycler;
     RecyclerView.LayoutManager orderLayoutManager;
     FirebaseRecyclerAdapter<Request, OrderViewHolder> orderAdapter;
+    FirebaseAuth auth;
 
 
-    String userId = Common.currentUser.getPhone();
+    String userId;
     String destination;
 
     @Override
@@ -39,6 +41,8 @@ public class OrderStatus extends AppCompatActivity {
 
 
                 // Initialize database
+        auth = FirebaseAuth.getInstance();
+        userId  = auth.getCurrentUser().getUid();
         orderDatabase = FirebaseDatabase.getInstance();
         orderDatabaseRef =orderDatabase.getReference("customerRequest").child(userId).child("orderDetails");
 

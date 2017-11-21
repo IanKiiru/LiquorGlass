@@ -25,6 +25,7 @@ import com.example.kiiru.liquorglass.Model.Sender;
 import com.example.kiiru.liquorglass.Model.Token;
 import com.example.kiiru.liquorglass.Remote.APIService;
 import com.example.kiiru.liquorglass.common.Common;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -54,6 +55,7 @@ public class Cart extends AppCompatActivity {
 
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
+    FirebaseAuth auth;
 
     APIService mService;
 
@@ -66,7 +68,8 @@ public class Cart extends AppCompatActivity {
         mService = Common.getFCMService();
 
         //Initialize Firebase
-        String userId = Common.currentUser.getPhone();
+        auth = FirebaseAuth.getInstance();
+        String userId = auth.getCurrentUser().getUid();
         requestDatabase = FirebaseDatabase.getInstance();
         requestsRef = requestDatabase.getReference("customerRequest").child(userId).child("orderDetails");
 
