@@ -86,7 +86,6 @@ public class AlcoholTypes extends AppCompatActivity {
                 viewHolder.txtMenuName.setText(model.getName());
                 Picasso.with(getBaseContext()).load(model.getImage())
                         .into(viewHolder.imageView);
-                final AlcoholTypesModel clickItem = model;
 
                 viewHolder.setItemClickListener(new ItemClickListener() {
                     @Override

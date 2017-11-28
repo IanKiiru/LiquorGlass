@@ -503,6 +503,7 @@ public class MainActivity extends AppCompatActivity {
             profileImageView.setImageURI(resultUri);
         }
     }
+
 }
 
 

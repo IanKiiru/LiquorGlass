@@ -54,7 +54,7 @@ public class DrinksList extends AppCompatActivity {
         drinksRef =drinksDatabase.getReference("Drinks");
 
 
-        //Cart Floating Action Button
+        materialSearchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
         viewCartFab = (FloatingActionButton) findViewById(R.id.viewCart_drinksList);
         viewCartFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,30 +71,29 @@ public class DrinksList extends AppCompatActivity {
         drinksRecycler_view.setLayoutManager(drinksLayoutManager);
 
 
+        if (Common.isConnectedToInternet(getBaseContext())) {
 
-        if(getIntent() !=null)
+         if(getIntent() !=null) {
             alcoholTypeID = getIntent().getStringExtra("AlcoholTypesId");
 
-        if (!alcoholTypeID.isEmpty() && alcoholTypeID !=null){
-
-            if (Common.isConnectedToInternet(getBaseContext()))
+            if (!alcoholTypeID.isEmpty() && alcoholTypeID != null) {
                     loadListDrinks(alcoholTypeID);
-            else {
-                Toast.makeText(DrinksList.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+                    loadSuggestions();
+                } else {
+                    Toast.makeText(DrinksList.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
 
+                }
             }
         }
 
-        materialSearchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
-        materialSearchBar.setHint("Search drinks");
 
-        loadSuggestions();
+
+
         materialSearchBar.setLastSuggestions(suggestionList);
         materialSearchBar.setCardViewElevation(10);
         materialSearchBar.addTextChangeListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
 
             @Override
@@ -117,6 +116,7 @@ public class DrinksList extends AppCompatActivity {
         materialSearchBar.setOnSearchActionListener(new MaterialSearchBar.OnSearchActionListener() {
             @Override
             public void onSearchStateChanged(boolean enabled) {
+                //When search bar is closed restore original adapter
                 if (!enabled)
                     drinksRecycler_view.setAdapter(drinksAdapter);
             }

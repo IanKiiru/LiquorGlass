@@ -57,7 +57,7 @@ public class Cart extends AppCompatActivity {
     CartAdapter adapter;
     FirebaseAuth auth;
 
-    APIService mService;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +65,7 @@ public class Cart extends AppCompatActivity {
         setContentView(R.layout.activity_cart);
 
         //Init service
-        mService = Common.getFCMService();
+
 
         //Initialize Firebase
         auth = FirebaseAuth.getInstance();
@@ -126,9 +126,6 @@ public class Cart extends AppCompatActivity {
                         .setValue(request);
 
                 new Database(getBaseContext()).cleanCart();
-
-                sendNotificationOfOrder(order_number);
-
                 Intent home_intent = new Intent(Cart.this, Home.class);
                 startActivity(home_intent);
                 finish();
@@ -149,53 +146,7 @@ public class Cart extends AppCompatActivity {
 
     }
 
-    private void sendNotificationOfOrder(final String order_number) {
-        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference("Tokens");
-        Query data = tokens.orderByChild("merchantToken").equalTo(true);
-        data.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
-                {
-                    Token merchantToken = postSnapshot.getValue(Token.class);
 
-
-                    //Creating raw payload to send
-
-                    Notification notification = new Notification("LIQUOR GLASS", "You have a new order "+order_number);
-                    Sender content = new Sender(merchantToken.getToken(), notification);
-
-                    mService.sendNotification(content)
-                            .enqueue(new Callback<MyResponse>() {
-                                @Override
-                                public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
-                                    if (response.code() == 200){
-                                    if (response.body().success == 1) {
-                                        Toast.makeText(Cart.this, "Order placed", Toast.LENGTH_SHORT).show();
-                                        finish();
-                                    } else {
-                                        Toast.makeText(Cart.this, "Failed", Toast.LENGTH_SHORT).show();
-
-                                    }
-                                }
-                                }
-
-                                @Override
-                                public void onFailure(Call<MyResponse> call, Throwable t) {
-                                    Log.e("ERROR", t.getMessage());
-
-                                }
-                            });
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
 
     private void loadListDrinks() {
         cart = new Database(this).getCarts();

@@ -37,7 +37,12 @@ import com.bumptech.glide.Glide;
 import com.directions.route.Route;
 import com.directions.route.RouteException;
 import com.directions.route.RoutingListener;
+import com.example.kiiru.liquorglass.Model.MyResponse;
+import com.example.kiiru.liquorglass.Model.Notification;
 import com.example.kiiru.liquorglass.Model.Request;
+import com.example.kiiru.liquorglass.Model.Sender;
+import com.example.kiiru.liquorglass.Model.Token;
+import com.example.kiiru.liquorglass.Remote.APIService;
 import com.example.kiiru.liquorglass.common.Common;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -66,7 +71,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,6 +86,9 @@ import java.util.List;
 import java.util.Map;
 
 import io.paperdb.Paper;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import static com.example.kiiru.liquorglass.Cart.order_number;
 
@@ -103,6 +113,8 @@ public class Home extends AppCompatActivity
     double lat, lng;
     private LinearLayout merchantInfo;
     private FirebaseAuth mAuth;
+
+    APIService mService;
 
     private ImageView merchantProfileImage;
     String customePhone , userId;
@@ -142,6 +154,13 @@ public class Home extends AppCompatActivity
 
     }
 
+    private void updateToken(String token) {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference tokens = db.getReference("Tokens");
+        Token data = new Token(token,false);
+        tokens.child(userId).setValue(data);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +169,8 @@ public class Home extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Home");
         setSupportActionBar(toolbar);
+
+        mService = Common.getFCMService();
 
         merchantInfo = (LinearLayout) findViewById(R.id.merchantInfo);
 
@@ -179,6 +200,7 @@ public class Home extends AppCompatActivity
             mapFragment.getMapAsync(this);
         }
 
+        updateToken(FirebaseInstanceId.getInstance().getToken());
 
 
 
@@ -200,6 +222,8 @@ public class Home extends AppCompatActivity
                     geoFire.setLocation(userId, new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()));
 
                     customerLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+                    if (deliveryMarker!=null)
+                        deliveryMarker.remove();
                     deliveryMarker = mMap.addMarker(new MarkerOptions().position(customerLocation).title("Delivery to be made here").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
                     confirmLoc.setText("Finding liquor store ...");
                     getClosestStore();
@@ -232,7 +256,7 @@ public class Home extends AppCompatActivity
 
         View headerLayout = navigationView.getHeaderView(0);
         txtFullName = (TextView) headerLayout.findViewById(R.id.txtFullName);
-        txtFullName.setText(Common.currentUser.getfName());
+        txtFullName.setText(Common.currentUser.getfName()+" "+Common.currentUser.getlName() );
 
         autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
@@ -382,6 +406,54 @@ public class Home extends AppCompatActivity
         });
     }
 
+    /*private void sendNotificationOfOrder(final String order_number) {
+        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference("Tokens");
+        Query data = tokens.orderByChild("merchantToken").equalTo(true);
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
+                {
+                    Token merchantToken = postSnapshot.getValue(Token.class);
+
+
+                    //Creating raw payload to send
+
+                    Notification notification = new Notification("LIQUOR GLASS", "You have a new order "+order_number);
+                    Sender content = new Sender(merchantToken.getToken(), notification);
+
+                    mService.sendNotification(content)
+                            .enqueue(new Callback<MyResponse>() {
+                                @Override
+                                public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                                    if (response.code() == 200){
+                                        if (response.body().success == 1) {
+                                            Toast.makeText(Home.this, "Order placed", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        } else {
+                                            Toast.makeText(Home.this, "Failed to send notification", Toast.LENGTH_SHORT).show();
+
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<MyResponse> call, Throwable t) {
+                                    Log.e("ERROR", t.getMessage());
+
+                                }
+                            });
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }*/
+
 
     private void getMerchantInfo(){
         final ProgressDialog mProgressDialog = new ProgressDialog(Home.this);
@@ -515,6 +587,7 @@ public class Home extends AppCompatActivity
 
         } else if (id == R.id.nav_logout) {
             Paper.book().destroy();
+            FirebaseAuth.getInstance().signOut();
             Intent signOut_intent = new Intent(Home.this, MainActivity.class);
             signOut_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(signOut_intent);
@@ -592,13 +665,14 @@ public class Home extends AppCompatActivity
             lat = location.getLatitude();
             lng = location.getLongitude();
             LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-            if (deliveryMarker == null) {
+            if (deliveryMarker != null)
+                deliveryMarker.remove();
                 deliveryMarker = mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
                 CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, 15);
                 mMap.animateCamera(update);
 
                 new GetAddress().execute(String.format("%.4f,%.4f", lat, lng));
-            }
+
 
         }
 
@@ -660,8 +734,6 @@ public class Home extends AppCompatActivity
                if (destination == null) {
                    destination = address;
                    autocompleteFragment.setText(address);
-               } else if (destination != null){
-                   Toast.makeText(Home.this, "Your destination is " +destination, Toast.LENGTH_SHORT).show();
                }
 
             } catch (JSONException e) {
