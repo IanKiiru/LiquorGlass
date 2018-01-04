@@ -1,14 +1,12 @@
 package com.example.kiiru.liquorglass.Model;
 
-/**
- * Created by Kiiru on 11/13/2017.
- */
+
 
 public class Notification {
-    public String body;
     public String title;
+    public String body;
 
-    public Notification(String body, String title) {
+    public Notification(String title, String body) {
         this.body = body;
         this.title = title;
     }

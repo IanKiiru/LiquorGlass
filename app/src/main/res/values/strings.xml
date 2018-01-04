@@ -20,4 +20,21 @@
     <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
         AIzaSyDF7Uy1ibN5RoPmXHQ1fQ4weSMc55r-aMo
     </string>
+
+    <string name="drawerShoppingCart">Shopping cart</string>
+    <string name="drawerOrders">Orders</string>
+    <string name="drawerYourProfile">Your Profile</string>
+    <string name="drawerSignOut">Sign out</string>
+    <string name="description">Jack Daniels background wallpaper for LiquorGlass app</string>
+    <string name="drinksMenuItemText">Name of drink</string>
+    <string name="user_first_name">First Name:</string>
+    <string name="user_last_name">Last Name:</string>
+    <string name="user_phone_number">Phone Number:</string>
+    <string name="user_email_address">Email Address:</string>
+    <string name="user_password">Password:</string>
+    <string name="user_save">Save</string>
+    <string name="user_cancel">Cancel</string>
+    <string name="cart_total">Total:</string>
+    <string name="details_drink_name">Drink Name</string>
+    <string name="details_description">Description</string>
 </resources>

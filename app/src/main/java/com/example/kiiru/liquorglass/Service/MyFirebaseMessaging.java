@@ -10,19 +10,19 @@ import android.support.v4.app.NotificationCompat;
 
 import com.example.kiiru.liquorglass.MainActivity;
 import com.example.kiiru.liquorglass.R;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.google.gson.Gson;
 
-/**
- * Created by Kiiru on 11/13/2017.
- */
+
 
 public class MyFirebaseMessaging extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        super.onMessageReceived(remoteMessage);
-        sendNotification(remoteMessage);
+
+       // sendNotification(remoteMessage);
     }
 
     private void sendNotification(RemoteMessage remoteMessage) {

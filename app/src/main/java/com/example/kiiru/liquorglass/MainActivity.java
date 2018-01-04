@@ -56,17 +56,16 @@ import dmax.dialog.SpotsDialog;
 import io.paperdb.Paper;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
-
-import static com.example.kiiru.liquorglass.Home.MY_PERMISSIONS_REQUEST_LOCATION;
-
 public class MainActivity extends AppCompatActivity {
 
-    private Button btn_register, btn_login;
     RelativeLayout rootLayout;
     FirebaseAuth auth;
     ImageView profileImageView;
-    private Uri resultUri;
     SpotsDialog regProgressDialog;
+     FirebaseDatabase cDatabase = FirebaseDatabase.getInstance();
+    DatabaseReference table_users = cDatabase.getReference().child("Users").child("Customers");
+    private Button btn_register, btn_login;
+    private Uri resultUri;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -81,16 +80,10 @@ public class MainActivity extends AppCompatActivity {
                 .setFontAttrId(R.attr.fontPath)
                 .build());
         setContentView(R.layout.activity_main);
-
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
-
-        }
         auth = FirebaseAuth.getInstance();
-        rootLayout = (RelativeLayout) findViewById(R.id.rootLayout);
-        btn_register = (Button) findViewById(R.id.btn_signUp);
-        btn_login = (Button) findViewById(R.id.btn_signIn);
+        rootLayout = findViewById(R.id.rootLayout);
+        btn_register = findViewById(R.id.btn_signUp);
+        btn_login = findViewById(R.id.btn_signIn);
 
         regProgressDialog = new SpotsDialog(MainActivity.this);
 
@@ -130,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void login( final String email, final String pwd) {
 
         //Initialize the Firebase Database
@@ -159,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                                         mProgressDialog.dismiss();
                                         Snackbar.make(rootLayout, "Sign in successful", Snackbar.LENGTH_SHORT)
                                                 .show();
-                                        startActivity(new Intent(MainActivity.this, AlcoholTypes.class));
+                                        startActivity(new Intent(MainActivity.this, Home.class));
                                     }
                                 }
 
@@ -200,9 +192,9 @@ public class MainActivity extends AppCompatActivity {
         View login_layout = inflater.inflate(R.layout.layout_login, null);
             dialog.setView(login_layout);
 
-        final MaterialEditText edtEmail = (MaterialEditText) login_layout.findViewById(R.id.edtLoginEmail);
-        final MaterialEditText edtPassword = (MaterialEditText) login_layout.findViewById(R.id.edtLoginPassword);
-            final com.rey.material.widget.CheckBox checkBox = (com.rey.material.widget.CheckBox) login_layout.findViewById(R.id.chkBoxRememberMe);
+        final MaterialEditText edtEmail = login_layout.findViewById(R.id.edtLoginEmail);
+        final MaterialEditText edtPassword = login_layout.findViewById(R.id.edtLoginPassword);
+            final com.rey.material.widget.CheckBox checkBox = login_layout.findViewById(R.id.chkBoxRememberMe);
 
 
 
@@ -255,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
                                                 Snackbar.make(rootLayout, "Sign in successful", Snackbar.LENGTH_SHORT)
                                                         .show();
-                                                startActivity(new Intent(MainActivity.this, AlcoholTypes.class));
+                                                startActivity(new Intent(MainActivity.this, Home.class));
 
                                             }
 
@@ -298,8 +290,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-     FirebaseDatabase cDatabase = FirebaseDatabase.getInstance();
-    DatabaseReference table_users = cDatabase.getReference().child("Users").child("Customers");
+
     private void showRegisterDialog() {
         if (Common.isConnectedToInternet(getBaseContext())) {
 
@@ -310,13 +301,13 @@ public class MainActivity extends AppCompatActivity {
         View register_layout = inflater.inflate(R.layout.layout_register, null);
             dialog.setView(register_layout);
 
-        final MaterialEditText edtEmail = (MaterialEditText) register_layout.findViewById(R.id.edtEmail);
-        final MaterialEditText edtFirstName = (MaterialEditText) register_layout.findViewById(R.id.edtFirstName);
-        final MaterialEditText edtLastName = (MaterialEditText) register_layout.findViewById(R.id.edtLastName);
-        final MaterialEditText edtPhone = (MaterialEditText) register_layout.findViewById(R.id.edtPhone);
-        final MaterialEditText edtPassword = (MaterialEditText) register_layout.findViewById(R.id.edtPassword);
-        final MaterialEditText edtConfirmPassword = (MaterialEditText) register_layout.findViewById(R.id.edtConfirmPassword);
-            profileImageView = (ImageView) register_layout.findViewById(R.id.profileImage);
+        final MaterialEditText edtEmail = register_layout.findViewById(R.id.edtEmail);
+        final MaterialEditText edtFirstName = register_layout.findViewById(R.id.edtFirstName);
+        final MaterialEditText edtLastName = register_layout.findViewById(R.id.edtLastName);
+        final MaterialEditText edtPhone = register_layout.findViewById(R.id.edtPhone);
+        final MaterialEditText edtPassword = register_layout.findViewById(R.id.edtPassword);
+        final MaterialEditText edtConfirmPassword = register_layout.findViewById(R.id.edtConfirmPassword);
+            profileImageView = register_layout.findViewById(R.id.profileImage);
             profileImageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

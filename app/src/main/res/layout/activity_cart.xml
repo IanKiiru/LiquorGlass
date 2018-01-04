@@ -4,21 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     android:background="@drawable/liquor_glass_background"
+    android:padding="16dp"
     tools:context="com.example.kiiru.liquorglass.Cart">
     
     <android.support.v7.widget.RecyclerView
+        android:id="@+id/listCart"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/listCart"
         android:background="@android:color/transparent"/>
     
     <android.support.v7.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        android:layout_marginTop="10dp"
         android:layout_alignParentBottom="true"
+        android:layout_marginTop="10dp"
         app:cardBackgroundColor="@color/colorPrimary">
 
         <RelativeLayout
@@ -29,42 +29,42 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_margin="8dp"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Total: "
-                android:textSize="20sp"
-                android:textColor="@android:color/white" />
+                android:text="@string/cart_total"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" />
 
                 <TextView
+                    android:id="@+id/totalTxtView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="KSH 4,000"
-                    android:id="@+id/totalTxtView"
-                    android:textSize="20sp"
-                    android:textColor="@android:color/white" />
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp" />
 
 
 
             </LinearLayout>
 
             <info.hoang8f.widget.FButton
+                android:id="@+id/btnPlaceOrder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnPlaceOrder"
+                android:layout_alignParentBottom="true"
+                android:layout_margin="8dp"
                 android:text="@string/place_order"
                 android:textColor="@android:color/white"
-                android:layout_alignParentBottom="true"
-                app:buttonColor="@color/colorAccent"
+                app:cornerRadius="4dp"
+                app:fButtonColor="@color/colorAccent"
                 app:shadowColor="@android:color/black"
                 app:shadowEnabled="true"
                 app:shadowHeight="5dp"
-                app:cornerRadius="4dp"
-                android:layout_margin="8dp"
                 />
 
 

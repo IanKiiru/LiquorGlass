@@ -1,5 +1,6 @@
 package com.example.kiiru.liquorglass;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +28,9 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 public class DrinksList extends AppCompatActivity {
 
     FirebaseDatabase drinksDatabase;
@@ -43,10 +47,19 @@ public class DrinksList extends AppCompatActivity {
     List<String> suggestionList = new ArrayList<>();
     MaterialSearchBar materialSearchBar;
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/Arkhip_font.ttf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_drinks_list);
 
         // Initialize Firebase
@@ -54,8 +67,8 @@ public class DrinksList extends AppCompatActivity {
         drinksRef =drinksDatabase.getReference("Drinks");
 
 
-        materialSearchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
-        viewCartFab = (FloatingActionButton) findViewById(R.id.viewCart_drinksList);
+        materialSearchBar = findViewById(R.id.searchBar);
+        viewCartFab = findViewById(R.id.viewCart_drinksList);
         viewCartFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,7 +78,7 @@ public class DrinksList extends AppCompatActivity {
         });
 
         //Load the menu
-        drinksRecycler_view = (RecyclerView) findViewById(R.id.drinksList_recycler);
+        drinksRecycler_view = findViewById(R.id.drinksList_recycler);
         drinksRecycler_view.setHasFixedSize(true);
         drinksLayoutManager = new LinearLayoutManager(this);
         drinksRecycler_view.setLayoutManager(drinksLayoutManager);

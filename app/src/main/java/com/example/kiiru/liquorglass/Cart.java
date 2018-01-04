@@ -1,5 +1,6 @@
 package com.example.kiiru.liquorglass;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.design.widget.Snackbar;
@@ -32,6 +33,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -41,31 +43,40 @@ import java.util.Locale;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
 public class Cart extends AppCompatActivity {
 
+    public static String order_number = String.valueOf(System.currentTimeMillis());
     FirebaseDatabase requestDatabase;
     DatabaseReference requestsRef;
     RecyclerView cartRecycler;
     RecyclerView.LayoutManager cartLayoutManager;
-
     TextView totalTxtView;
     Button placeOrder;
-
     List<Order> cart = new ArrayList<>();
     CartAdapter adapter;
     FirebaseAuth auth;
+    APIService mService;
 
-
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/Arkhip_font.ttf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_cart);
 
         //Init service
-
+        mService = Common.getFCMService();
 
         //Initialize Firebase
         auth = FirebaseAuth.getInstance();
@@ -73,13 +84,13 @@ public class Cart extends AppCompatActivity {
         requestDatabase = FirebaseDatabase.getInstance();
         requestsRef = requestDatabase.getReference("customerRequest").child(userId).child("orderDetails");
 
-        cartRecycler = (RecyclerView) findViewById(R.id.listCart);
+        cartRecycler = findViewById(R.id.listCart);
         cartRecycler.setHasFixedSize(true);
         cartLayoutManager = new LinearLayoutManager(this);
         cartRecycler.setLayoutManager(cartLayoutManager);
 
-        totalTxtView = (TextView) findViewById(R.id.totalTxtView);
-        placeOrder = (Button) findViewById(R.id.btnPlaceOrder);
+        totalTxtView = findViewById(R.id.totalTxtView);
+        placeOrder = findViewById(R.id.btnPlaceOrder);
         placeOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,10 +107,17 @@ public class Cart extends AppCompatActivity {
         });
 
         loadListDrinks();
+
+        updateToken(FirebaseInstanceId.getInstance().getToken());
     }
 
-    public static String order_number = String.valueOf(System.currentTimeMillis());
-
+    private void updateToken(String token) {
+        String userId = auth.getCurrentUser().getUid();
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference tokens = db.getReference("Tokens");
+        Token data = new Token(token,false);
+        tokens.child(userId).setValue(data);
+    }
 
     private void showAlertDialog(){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(Cart.this);
@@ -126,7 +144,7 @@ public class Cart extends AppCompatActivity {
                         .setValue(request);
 
                 new Database(getBaseContext()).cleanCart();
-                Intent home_intent = new Intent(Cart.this, Home.class);
+                Intent home_intent = new Intent(Cart.this, MapActivity.class);
                 startActivity(home_intent);
                 finish();
             }
@@ -145,6 +163,54 @@ public class Cart extends AppCompatActivity {
 
 
     }
+
+    /*private void sendNotificationOfOrder(final String order_number) {
+        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference("Tokens");
+        Query data = tokens.orderByChild("merchantToken").equalTo(true);
+        data.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
+                {
+                    Token merchantToken = postSnapshot.getValue(Token.class);
+
+
+                    //Creating raw payload to send
+
+                    Notification notification = new Notification("LIQUOR GLASS", "You have a new order "+order_number);
+                    Sender content = new Sender(merchantToken.getToken(), notification);
+
+                    mService.sendNotification(content)
+                            .enqueue(new Callback<MyResponse>() {
+                                @Override
+                                public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                                    if (response.code() == 200){
+                                        if (response.body().success == 1) {
+                                            Toast.makeText(Home.this, "Order placed", Toast.LENGTH_SHORT).show();
+                                            finish();
+                                        } else {
+                                            Toast.makeText(Home.this, "Failed to send notification", Toast.LENGTH_SHORT).show();
+
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<MyResponse> call, Throwable t) {
+                                    Log.e("ERROR", t.getMessage());
+
+                                }
+                            });
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }*/
 
 
 

@@ -11,22 +11,23 @@
         android:layout_height="match_parent">
 
         <ImageView
+            android:id="@+id/drinks_menu_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/drinks_menu_image"
+            android:contentDescription="@string/description"
             android:scaleType="centerCrop"
             android:src="@drawable/liquor_glass_background"/>
 
         <TextView
+            android:id="@+id/drinks_menu_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/drinks_menu_name"
-            android:text="Name of drink"
-            android:textColor="@android:color/white"
+            android:layout_alignParentBottom="true"
             android:background="#4f0e0d0e"
-            android:textSize="20sp"
             android:gravity="center"
-            android:layout_alignParentBottom="true"/>
+            android:text="@string/drinksMenuItemText"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"/>
 
     </RelativeLayout>
 

@@ -2,6 +2,7 @@ package com.example.kiiru.liquorglass;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -34,45 +35,57 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 public class UserProfile extends AppCompatActivity {
 
+    FirebaseAuth auth;
     private EditText firstNameField, lastNameField, emailField, passwordField, phoneField;
-
     private Button backButton, saveButton;
-
     private ImageView profileImageView;
     private DatabaseReference mCustomerDatabase;
-
     private String userID;
     private String firstName;
     private String lastName;
     private String email;
     private String phone;
     private String password;
-
     private String mProfileImageUrl;
     private Uri resultUri;
-    FirebaseAuth auth;
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/Arkhip_font.ttf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_user_profile);
 
-        firstNameField = (EditText) findViewById(R.id.profileFirstName);
-        lastNameField = (EditText) findViewById(R.id.profileLastName);
-        emailField = (EditText) findViewById(R.id.profileEmail);
-        phoneField = (EditText) findViewById(R.id.profilePhone);
-        passwordField = (EditText) findViewById(R.id.profilePassword);
+        firstNameField = findViewById(R.id.profileFirstName);
+        lastNameField = findViewById(R.id.profileLastName);
+        emailField = findViewById(R.id.profileEmail);
+        phoneField = findViewById(R.id.profilePhone);
+        passwordField = findViewById(R.id.profilePassword);
 
-        profileImageView = (ImageView) findViewById(R.id.profileImage);
+        profileImageView = findViewById(R.id.profileImage);
 
         auth = FirebaseAuth.getInstance();
-        userID = auth.getCurrentUser().getUid();
+        if (auth.getCurrentUser().getUid() != null)
+        {
+            userID = auth.getCurrentUser().getUid();
+        }
 
-        backButton = (Button) findViewById(R.id.profileBack);
-        saveButton = (Button) findViewById(R.id.profileSave);
+
+        backButton = findViewById(R.id.profileBack);
+        saveButton = findViewById(R.id.profileSave);
 
         mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Customers").child(userID);
 
@@ -106,7 +119,7 @@ public class UserProfile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finish();
-                return;
+
             }
         });
     }

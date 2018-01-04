@@ -3,6 +3,7 @@
     package="com.example.kiiru.liquorglass">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -31,11 +32,11 @@
             android:name=".Home"
             android:label="@string/title_activity_home"
             android:theme="@style/AppTheme" />
-        <activity android:name=".AlcoholTypes" />
+        <activity android:name=".MapActivity" />
         <activity android:name=".DrinksList" />
         <activity android:name=".DrinkDetails" />
         <activity android:name=".Cart" />
-        <activity android:name=".OrderStatus" />
+        <activity android:name=".Orders" />
         <activity android:name=".UserProfile" />
         
         <service android:name=".Service.MyFirebaseIdService">

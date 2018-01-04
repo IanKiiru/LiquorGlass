@@ -1,5 +1,6 @@
 package com.example.kiiru.liquorglass;
 
+import android.content.Context;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 public class DrinkDetails extends AppCompatActivity {
 
     TextView drink_name, drink_price, drink_description;
@@ -36,8 +40,17 @@ public class DrinkDetails extends AppCompatActivity {
     String drinkId="";
 
     @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/Arkhip_font.ttf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_drink_details);
 
         //Initialize Database
@@ -46,8 +59,8 @@ public class DrinkDetails extends AppCompatActivity {
         detailsRef = detailsDatabase.getReference("Drinks");
 
 
-        numberButton = (ElegantNumberButton) findViewById(R.id.number_button);
-        btn_cart = (FloatingActionButton) findViewById(R.id.details_btn_cart);
+        numberButton = findViewById(R.id.number_button);
+        btn_cart = findViewById(R.id.details_btn_cart);
 
         btn_cart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,12 +77,12 @@ public class DrinkDetails extends AppCompatActivity {
             }
         });
 
-        drink_description = (TextView) findViewById(R.id.drink_description);
-        drink_price = (TextView) findViewById(R.id.drink_price);
-        drink_name = (TextView) findViewById(R.id.drink_name);
-        drink_image = (ImageView) findViewById(R.id.details_drink_image);
+        drink_description = findViewById(R.id.drink_description);
+        drink_price = findViewById(R.id.drink_price);
+        drink_name = findViewById(R.id.drink_name);
+        drink_image = findViewById(R.id.details_drink_image);
 
-        collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.details_collapsing);
+        collapsingToolbarLayout = findViewById(R.id.details_collapsing);
         collapsingToolbarLayout.setExpandedTitleTextAppearance(R.style.ExpandedAppBar);
         collapsingToolbarLayout.setCollapsedTitleTextAppearance(R.style.CollapsedAppBar);
 
@@ -98,7 +111,7 @@ public class DrinkDetails extends AppCompatActivity {
                         .into(drink_image);
 
                 collapsingToolbarLayout.setTitle(currentDrinkSModel.getName());
-                drink_price.setText(currentDrinkSModel.getPrice());
+                drink_price.setText("Ksh "+currentDrinkSModel.getPrice());
                 drink_name.setText(currentDrinkSModel.getName());
 
             }

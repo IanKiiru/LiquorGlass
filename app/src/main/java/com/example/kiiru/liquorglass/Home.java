@@ -1,23 +1,11 @@
 package com.example.kiiru.liquorglass;
 
-import android.*;
-import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -27,132 +15,39 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.directions.route.Route;
-import com.directions.route.RouteException;
-import com.directions.route.RoutingListener;
-import com.example.kiiru.liquorglass.Model.MyResponse;
-import com.example.kiiru.liquorglass.Model.Notification;
-import com.example.kiiru.liquorglass.Model.Request;
-import com.example.kiiru.liquorglass.Model.Sender;
+import com.example.kiiru.liquorglass.Interface.ItemClickListener;
+import com.example.kiiru.liquorglass.Model.AlcoholTypesModel;
 import com.example.kiiru.liquorglass.Model.Token;
-import com.example.kiiru.liquorglass.Remote.APIService;
+import com.example.kiiru.liquorglass.ViewHolder.AlcoholTypesMenuViewHolder;
 import com.example.kiiru.liquorglass.common.Common;
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
-import com.firebase.geofire.GeoQuery;
-import com.firebase.geofire.GeoQueryEventListener;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.AutocompleteFilter;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
-import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.CameraUpdate;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.squareup.picasso.Picasso;
 
 import io.paperdb.Paper;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-import static com.example.kiiru.liquorglass.Cart.order_number;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class Home extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, RoutingListener {
-
+        implements NavigationView.OnNavigationItemSelectedListener {
+    DatabaseReference alcoholTypes;
+    RecyclerView alcoholRecycler_menu;
+    RecyclerView.LayoutManager layoutManager;
+    FirebaseRecyclerAdapter<AlcoholTypesModel, AlcoholTypesMenuViewHolder> adapter;
+    FloatingActionButton viewCartFab;
+    FirebaseAuth auth;
+    String userId;
     private FirebaseDatabase cDatabase;
-    private TextView txtFullName, deliveryLocation, merchantName, merchantPhone;
-    private GoogleMap mMap;
-    GoogleApiClient mGoogleApiClient;
-    private SupportMapFragment mapFragment;
-    private LocationRequest mLocationRequest;
-    private DatabaseReference locationRef;
-    Location lastLocation;
-    Button confirmLoc;
-    private LatLng customerLocation;
-    String destination;
-    private Boolean requestBol = false;
-    private Marker deliveryMarker;
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 0;
-    PlaceAutocompleteFragment autocompleteFragment;
-    double lat, lng;
-    private LinearLayout merchantInfo;
-    private FirebaseAuth mAuth;
-
-    APIService mService;
-
-    private ImageView merchantProfileImage;
-    String customePhone , userId;
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // Permission was granted.
-                    mapFragment.getMapAsync(this);
-                    if (ActivityCompat.checkSelfPermission(this,
-                            Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED) {
-
-                    }
-
-                } else {
-
-                    // Permission denied, Disable the functionality that depends on this permission.
-                    Toast.makeText(this, "Permission to access your location denied", Toast.LENGTH_LONG).show();
-                }
-                return;
-            }
-
-            // other 'case' lines to check for other permissions this app might request.
-            //You can add here other case statements according to your requirement.
-        }
+    private TextView txtFullName;
 
 
 
-    }
 
     private void updateToken(String token) {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -161,75 +56,56 @@ public class Home extends AppCompatActivity
         tokens.child(userId).setValue(data);
     }
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                .setDefaultFontPath("fonts/Arkhip_font.ttf")
+                .setFontAttrId(R.attr.fontPath)
+                .build());
         setContentView(R.layout.activity_home);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Home");
         setSupportActionBar(toolbar);
 
-        mService = Common.getFCMService();
+        // Initialize Firebase
+        cDatabase = FirebaseDatabase.getInstance();
+        alcoholTypes =cDatabase.getReference("AlcoholTypes");
+        auth = FirebaseAuth.getInstance();
 
-        merchantInfo = (LinearLayout) findViewById(R.id.merchantInfo);
+        userId = auth.getCurrentUser().getUid();
 
-        merchantProfileImage = (ImageView) findViewById(R.id.merchantProfileImage);
+        //Load the menu
+        alcoholRecycler_menu = findViewById(R.id.alcohol_recyclerMenu);
+        alcoholRecycler_menu.setHasFixedSize(true);
+        layoutManager = new LinearLayoutManager(this);
+        alcoholRecycler_menu.setLayoutManager(layoutManager);
 
-        merchantName = (TextView) findViewById(R.id.merchantName);
-        merchantPhone = (TextView) findViewById(R.id.merchantPhone);
-        deliveryLocation = (TextView) findViewById(R.id.deliveryLocation);
+        viewCartFab = findViewById(R.id.viewCartFab);
+        viewCartFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent cart_intent = new Intent(Home.this, Cart.class);
+                startActivity(cart_intent);
+            }
+        });
 
-        locationRef = FirebaseDatabase.getInstance().getReference();
-        mapFragment = SupportMapFragment.newInstance();
+        if(Common.isConnectedToInternet(this))
+            loadMenu();
 
-        //Init Paper
-
-        Paper.init(this);
-        android.support.v4.app.FragmentManager sFm = getSupportFragmentManager();
-        sFm.beginTransaction().add(R.id.mapCustomer, mapFragment).commit();
-
-        mAuth = FirebaseAuth.getInstance();
-        customePhone = Common.currentUser.getPhone();
-        userId = mAuth.getCurrentUser().getUid();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
-        } else {
-            mapFragment.getMapAsync(this);
+        else {
+            Toast.makeText(Home.this, "Please check your internet connection", Toast.LENGTH_SHORT).show();
+            return;
         }
 
         updateToken(FirebaseInstanceId.getInstance().getToken());
 
-
-
-        confirmLoc = (Button) findViewById(R.id.confirm_locationBtn);
-        confirmLoc.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (requestBol) {
-                    endRide();
-
-                } else {
-                    requestBol = true;
-
-
-
-                    DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId).child("location");
-                    GeoFire geoFire = new GeoFire(ref);
-                    geoFire.setLocation(userId, new GeoLocation(lastLocation.getLatitude(), lastLocation.getLongitude()));
-
-                    customerLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                    if (deliveryMarker!=null)
-                        deliveryMarker.remove();
-                    deliveryMarker = mMap.addMarker(new MarkerOptions().position(customerLocation).title("Delivery to be made here").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
-                    confirmLoc.setText("Finding liquor store ...");
-                    getClosestStore();
-                }
-            }
-        });
 
 
 
@@ -243,309 +119,57 @@ public class Home extends AppCompatActivity
             }
         }); */
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         //set Name for user on Navigation header
 
         View headerLayout = navigationView.getHeaderView(0);
-        txtFullName = (TextView) headerLayout.findViewById(R.id.txtFullName);
+        txtFullName = headerLayout.findViewById(R.id.txtFullName);
         txtFullName.setText(Common.currentUser.getfName()+" "+Common.currentUser.getlName() );
 
-        autocompleteFragment = (PlaceAutocompleteFragment)
-                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-        autocompleteFragment.setHint("Enter your destination");
 
 
 
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
-                destination = place.getName().toString();
-            }
 
-            @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.
-
-            }
-        });
-        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-                .setTypeFilter(Place.TYPE_COUNTRY)
-                .setCountry("KE")
-                .build();
-        autocompleteFragment.setFilter(typeFilter);
 
 
     }
 
-    private void endRide() {
-        requestBol = false;
-        geoQuery.removeAllListeners();
-        merchantLocationRef.removeEventListener(merchantLocationRefListener);
-        orderHasBeenShippedRef.removeEventListener(orderHasBeenShippedRefListener);
+    private void loadMenu() {
 
-        if (merchantFoundID != null) {
-            DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest");
-            merchantRef.removeValue();
-            merchantFoundID = null;
+        adapter = new FirebaseRecyclerAdapter<AlcoholTypesModel, AlcoholTypesMenuViewHolder>(AlcoholTypesModel.class, R.layout.alcohol_menu_item, AlcoholTypesMenuViewHolder.class, alcoholTypes) {
+            @Override
+            protected void populateViewHolder(AlcoholTypesMenuViewHolder viewHolder, AlcoholTypesModel model, int position) {
+                viewHolder.txtMenuName.setText(model.getName());
+                Picasso.with(getBaseContext()).load(model.getImage())
+                        .into(viewHolder.imageView);
 
-        }
-        merchantFound = false;
-        radius = 1;
+                viewHolder.setItemClickListener(new ItemClickListener() {
+                    @Override
+                    public void onClick(View view, int position, boolean isLongClick) {
+                        // Get AlcoholTypesId and send it to DrinksListActivity
+                        Intent drinksList_intent = new Intent(Home.this, DrinksList.class);
+                        //Because AlcoholTypeId is key we just key of this item
+                        drinksList_intent.putExtra("AlcoholTypesId", adapter.getRef(position).getKey());
+                        startActivity(drinksList_intent);
+                    }
+                });
+            }
+        };
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest").child(userId);
-        GeoFire geoFire = new GeoFire(ref);
-        geoFire.removeLocation("location");
-
-        if (deliveryMarker != null) {
-            deliveryMarker.remove();
-        }
-        if (merchantMarker != null) {
-            merchantMarker.remove();
-        }
-        confirmLoc.setText("CONFIRM LOCATION");
-        merchantInfo.setVisibility(View.GONE);
-
+        alcoholRecycler_menu.setAdapter(adapter);
     }
-
-    private DatabaseReference orderHasBeenShippedRef;
-    private ValueEventListener orderHasBeenShippedRefListener;
-    private void getOrderDelivered() {
-        orderHasBeenShippedRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest").child("customerOrderId");
-        orderHasBeenShippedRefListener = orderHasBeenShippedRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()){
-
-                } else {
-                    endRide();
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-    }
-
-
-    private int radius = 1;
-    private Boolean merchantFound = false;
-    private String merchantFoundID;
-
-    GeoQuery geoQuery;
-
-    private void getClosestStore() {
-        DatabaseReference merchantLocation = FirebaseDatabase.getInstance().getReference().child("merchantsAvailable");
-
-        GeoFire geoFire = new GeoFire(merchantLocation);
-        geoQuery = geoFire.queryAtLocation(new GeoLocation(customerLocation.latitude, customerLocation.longitude), radius);
-        geoQuery.removeAllListeners();
-
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-            @Override
-            public void onKeyEntered(String key, GeoLocation location) {
-                if (!merchantFound && requestBol) {
-                    merchantFound = true;
-                    merchantFoundID = key;
-
-                    DatabaseReference merchantRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID).child("customerRequest");
-                    HashMap map = new HashMap();
-                    map.put("customerOrderId", userId);
-                    map.put("destination", destination);
-                    merchantRef.updateChildren(map);
-
-                    DatabaseReference destinationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(userId).child("orderDetails").child(order_number);
-                    HashMap destinationMap = new HashMap();
-                    destinationMap.put("address", destination);
-                    destinationRef.updateChildren(destinationMap);
-
-
-                    getMerchantLocation();
-                    getMerchantInfo();
-                    getOrderDelivered();
-                    confirmLoc.setText("Looking for store's Location....");
-                }
-
-            }
-
-            @Override
-            public void onKeyExited(String key) {
-
-            }
-
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-
-            }
-
-            @Override
-            public void onGeoQueryReady() {
-                if (!merchantFound) {
-                    radius++;
-                    getClosestStore();
-                }
-
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
-        });
-    }
-
-    /*private void sendNotificationOfOrder(final String order_number) {
-        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference("Tokens");
-        Query data = tokens.orderByChild("merchantToken").equalTo(true);
-        data.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot:dataSnapshot.getChildren())
-                {
-                    Token merchantToken = postSnapshot.getValue(Token.class);
-
-
-                    //Creating raw payload to send
-
-                    Notification notification = new Notification("LIQUOR GLASS", "You have a new order "+order_number);
-                    Sender content = new Sender(merchantToken.getToken(), notification);
-
-                    mService.sendNotification(content)
-                            .enqueue(new Callback<MyResponse>() {
-                                @Override
-                                public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
-                                    if (response.code() == 200){
-                                        if (response.body().success == 1) {
-                                            Toast.makeText(Home.this, "Order placed", Toast.LENGTH_SHORT).show();
-                                            finish();
-                                        } else {
-                                            Toast.makeText(Home.this, "Failed to send notification", Toast.LENGTH_SHORT).show();
-
-                                        }
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(Call<MyResponse> call, Throwable t) {
-                                    Log.e("ERROR", t.getMessage());
-
-                                }
-                            });
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }*/
-
-
-    private void getMerchantInfo(){
-        final ProgressDialog mProgressDialog = new ProgressDialog(Home.this);
-        mProgressDialog.setTitle("Fetching Customer information...");
-        mProgressDialog.setMessage("Please wait...");
-        mProgressDialog.show();
-        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Merchants").child(merchantFoundID);
-        mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists() && dataSnapshot.getChildrenCount()>0){
-                    deliveryLocation.setText("Destination: "+destination);
-                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                    if(map.get("fName")!=null){
-                        merchantName.setText("Name: " +map.get("fName").toString());
-                    }
-                    if(map.get("phone")!=null){
-                        merchantPhone.setText("Phone: "+map.get("phone").toString());
-                    }
-                    if(map.get("profileImageUrl")!=null){
-                        Glide.with(getApplication()).load(map.get("profileImageUrl").toString()).into(merchantProfileImage);
-                    }
-                    mProgressDialog.dismiss();
-
-                    merchantInfo.setVisibility(View.VISIBLE);
-
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
-        });
-    }
-
-
-
-    private Marker merchantMarker;
-    private ValueEventListener merchantLocationRefListener;
-    private DatabaseReference merchantLocationRef;
-
-    private void getMerchantLocation() {
-        merchantLocationRef = FirebaseDatabase.getInstance().getReference().child("merchantsWorking").child(merchantFoundID).child("l");
-        merchantLocationRefListener = merchantLocationRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists() && requestBol) {
-                    List<Object> map = (List<Object>) dataSnapshot.getValue();
-                    double locationLat = 0;
-                    double locationLng = 0;
-                    confirmLoc.setText("Merchant Found");
-                    if (map.get(0) != null) {
-                        locationLat = Double.parseDouble(map.get(0).toString());
-                    }
-                    if (map.get(1) != null) {
-                        locationLng = Double.parseDouble(map.get(1).toString());
-                    }
-                    LatLng merchantLatLng = new LatLng(locationLat, locationLng);
-                    if (merchantMarker != null) {
-                        merchantMarker.remove();
-                    }
-                    Location loc1 = new Location("");
-                    loc1.setLatitude(customerLocation.latitude);
-                    loc1.setLongitude(customerLocation.longitude);
-
-                    Location loc2 = new Location("");
-                    loc2.setLatitude(merchantLatLng.latitude);
-                    loc2.setLongitude(merchantLatLng.longitude);
-
-                    float distance = loc2.distanceTo(loc1);
-                    if (distance < 100) {
-                        confirmLoc.setText("Merchant is within you vicinity");
-                        merchantMarker = mMap.addMarker(new MarkerOptions().position(merchantLatLng).title("Nearest Liquor Store").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_liquorstore)));
-                    } else {
-                        confirmLoc.setText("Liquor Store  Found: " + String.valueOf(distance) + " Meters");
-                        merchantMarker = mMap.addMarker(new MarkerOptions().position(merchantLatLng).title("Nearest Liquor Store").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_liquorstore)));
-                    }
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -573,16 +197,12 @@ public class Home extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_menu) {
-            Intent alcohol_menuIntent = new Intent(Home.this, AlcoholTypes.class);
-            startActivity(alcohol_menuIntent);
-
-        } else if (id == R.id.nav_cart) {
+        if (id == R.id.nav_cart) {
             Intent cart_intent = new Intent(Home.this, Cart.class);
             startActivity(cart_intent);
 
         } else if (id == R.id.nav_orders) {
-            Intent order_intent = new Intent(Home.this, OrderStatus.class);
+            Intent order_intent = new Intent(Home.this, Orders.class);
             startActivity(order_intent);
 
         } else if (id == R.id.nav_logout) {
@@ -597,152 +217,12 @@ public class Home extends AppCompatActivity
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(5000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
-
-        }
-
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
 
 
-
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Toast.makeText(this, "Trying to find your location", Toast.LENGTH_LONG).show();
-        mGoogleApiClient.connect();
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
-
-        }
-        buildGoogleApiClient();
-        mMap.setMyLocationEnabled(true);
-
-
-
-
-
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-    }
-
-
-        @Override
-        public void onLocationChanged (Location location){
-            lastLocation = location;
-            lat = location.getLatitude();
-            lng = location.getLongitude();
-            LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-            if (deliveryMarker != null)
-                deliveryMarker.remove();
-                deliveryMarker = mMap.addMarker(new MarkerOptions().position(userLocation).title("Your Location").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_mylocation)));
-                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(userLocation, 15);
-                mMap.animateCamera(update);
-
-                new GetAddress().execute(String.format("%.4f,%.4f", lat, lng));
-
-
-        }
-
-    @Override
-    public void onRoutingFailure(RouteException e) {
-        
-    }
-
-    @Override
-    public void onRoutingStart() {
-
-    }
-
-    @Override
-    public void onRoutingSuccess(ArrayList<Route> arrayList, int i) {
-
-    }
-
-    @Override
-    public void onRoutingCancelled() {
-
-    }
-
-    private class GetAddress extends AsyncTask<String,Void,String>{
-        ProgressDialog dialog = new ProgressDialog(Home.this);
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            dialog.setMessage("Please wait...");
-            dialog.setCanceledOnTouchOutside(false);
-            dialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            try{
-                double lat = Double.parseDouble(params[0].split(",")[0]);
-                double lng = Double.parseDouble(params[0].split(",")[1]);
-                String response;
-                HttpDataHandler http = new HttpDataHandler();
-                String url = String.format("https://maps.googleapis.com/maps/api/geocode/json?latlng=%.4f,%.4f&sensor=false",lat,lng);
-                response = http.GetHTTPData(url);
-                return response;
-            } catch (Exception ex)
-            {
-
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            try{
-                JSONObject jsonObject = new JSONObject(s);
-
-                String address = ((JSONArray)jsonObject.get("results")).getJSONObject(0).get("formatted_address").toString();
-               if (destination == null) {
-                   destination = address;
-                   autocompleteFragment.setText(address);
-               }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            if(dialog.isShowing())
-                dialog.dismiss();
-        }
-    }
-    }
+}
 
